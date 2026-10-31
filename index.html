@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>App Salud</title>
-  <meta name="description" content="Saca una foto de los ingredientes de un alimento y descubre si es recomendable para tu salud.">
+  <meta name="description" content="Sacá una foto de los ingredientes de un alimento y descubre si es recomendable para tu salud.">
   <meta name="theme-color" content="#1f7a4d">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
@@ -19,7 +19,7 @@
     <!-- 1. Inicio -->
     <section id="pantalla-inicio" class="pantalla">
       <h1>¿Es sano este producto?</h1>
-      <p class="sub">Saca una foto de la lista de <strong>ingredientes</strong> y te decimos si es recomendable para tu salud.</p>
+      <p class="sub">Sacá una foto de la lista de <strong>ingredientes</strong> y te decimos si es recomendable para tu salud.</p>
 
       <label class="boton-escanear" for="input-camara">
         <span class="icono-camara" aria-hidden="true">📷</span>
@@ -35,8 +35,8 @@
       </div>
 
       <div id="zona-escribir" class="zona-escribir" hidden>
-        <label for="texto-manual" class="etiqueta-campo">Copia aquí los ingredientes:</label>
-        <textarea id="texto-manual" rows="5" placeholder="Ej.: harina de trigo, azúcar, aceite de palma, sal…"></textarea>
+        <label for="texto-manual" class="etiqueta-campo">Copiá acá los ingredientes:</label>
+        <textarea id="texto-manual" rows="5" placeholder="Ej.: harina de trigo, azúcar, aceite de girasol, sal…"></textarea>
         <button type="button" class="boton boton-principal" id="btn-analizar-manual">Ver resultado</button>
       </div>
     </section>
@@ -51,8 +51,8 @@
 
     <!-- Recorte (opcional, sólo si se leyó mal) -->
     <section id="pantalla-recorte" class="pantalla" hidden>
-      <h2>Marca sólo los ingredientes</h2>
-      <p class="sub">Arrastra el dedo sobre la foto para rodear la lista de ingredientes.</p>
+      <h2>Marcá solo los ingredientes</h2>
+      <p class="sub">Arrastrá el dedo sobre la foto para rodear la lista de ingredientes.</p>
       <div class="marco-recorte"><canvas id="lienzo-recorte" aria-label="Foto de la etiqueta. Arrastra para seleccionar los ingredientes"></canvas></div>
       <button type="button" class="boton boton-principal boton-ancho" id="btn-leer">Leer de nuevo</button>
       <div class="enlaces">
@@ -76,14 +76,14 @@
 
       <details class="caja plegable">
         <summary id="resumen-ingredientes">Ver los ingredientes</summary>
-        <p class="ayuda">Toca uno para saber qué es y cómo afecta a tu salud.</p>
+        <p class="ayuda">Tocá uno para saber qué es y cómo afecta a tu salud.</p>
         <ul id="lista-ingredientes" class="lista-ingredientes"></ul>
         <div id="desconocidos"></div>
       </details>
 
       <details class="caja plegable" id="caja-corregir">
         <summary>¿Se leyó mal la etiqueta?</summary>
-        <p class="ayuda">Corrige el texto y vuelve a calcular, o marca en la foto sólo la zona de ingredientes.</p>
+        <p class="ayuda">Corregí el texto y volvé a calcular, o marcá en la foto solo la zona de ingredientes.</p>
         <textarea id="texto-ingredientes" rows="6" aria-label="Texto leído de la etiqueta"></textarea>
         <div class="acciones">
           <button type="button" class="boton" id="btn-analizar">Volver a calcular</button>
@@ -92,7 +92,7 @@
       </details>
     </section>
 
-    <p class="aviso-legal">Orientativo, basado en la EFSA, la OMS y la IARC. No sustituye a un profesional de la salud. Si tienes alergias, revisa siempre la etiqueta.</p>
+    <p class="aviso-legal">Orientativo, basado en la EFSA, la OMS y la IARC. No sustituye a un profesional de la salud. Si tenés alergias, revisá siempre la etiqueta.</p>
   </main>
 
   <template id="plantilla-ingrediente">

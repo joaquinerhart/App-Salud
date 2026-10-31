@@ -31,12 +31,12 @@
   let mensajeLectura = "Leyendo la etiqueta…";
   async function obtenerWorker() {
     if (worker) return worker;
-    if (!window.Tesseract) throw new Error("No se pudo cargar el lector. Revisa tu conexión a internet.");
+    if (!window.Tesseract) throw new Error("No se pudo cargar el lector. Revisá tu conexión a internet.");
     worker = await Tesseract.createWorker("spa", 1, {
       ...(window.OCR_OPCIONES || {}), // permite servir el lector desde archivos propios
       logger: (m) => {
         if (m.status === "recognizing text") progreso(m.progress, mensajeLectura);
-        else if (m.status && m.status.includes("load")) progreso(m.progress || 0, "Preparando el lector (sólo la primera vez)…");
+        else if (m.status && m.status.includes("load")) progreso(m.progress || 0, "Preparando el lector (solo la primera vez)…");
       },
     });
     return worker;
@@ -64,7 +64,7 @@
     try {
       await img.decode();
     } catch {
-      alertaInicio("No se pudo abrir la foto. Prueba con otra.");
+      alertaInicio("No se pudo abrir la foto. Probá con otra.");
       return;
     }
     imagenOriginal = img;
@@ -122,7 +122,7 @@
 
       if (!mejor.texto || !mejor.ingredientes) {
         texto.value = mejor.texto;
-        alertaInicio("No hemos podido leer los ingredientes. Acércate más a la lista, con buena luz y sin reflejos.");
+        alertaInicio("No hemos podido leer los ingredientes. Acercate más a la lista, con buena luz y sin reflejos.");
         return;
       }
       texto.value = mejor.texto;
@@ -294,7 +294,7 @@
     if (!valor) return;
     const r = Analizador.analizar(valor);
     if (!r.ingredientes.length) {
-      alertaInicio("No hemos reconocido ningún ingrediente. Revisa el texto o prueba con otra foto.");
+      alertaInicio("No hemos reconocido ningún ingrediente. Revisá el texto o probá con otra foto.");
       return;
     }
     pantallas.inicio.querySelector(".error")?.remove();

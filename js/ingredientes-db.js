@@ -15,13 +15,13 @@
     // ───────────── Azúcares y edulcorantes calóricos ─────────────
     {
       id: "azucar", nombre: "Azúcar (sacarosa)", categoria: "Azúcar añadido", nivel: "moderar",
-      alias: ["azúcar", "azucar", "sacarosa", "azúcar blanco", "azúcar de caña", "azúcar moreno", "azúcar de remolacha", "azúcar glas", "azúcar integral", "panela", "azúcar mascabado", "piloncillo", "rapadura"],
+      alias: ["azúcar impalpable", "azúcar rubia", "azúcar mascabo", "azúcar común", "azúcar refinada", "azúcar", "azucar", "sacarosa", "azúcar blanco", "azúcar de caña", "azúcar moreno", "azúcar de remolacha", "azúcar glas", "azúcar integral", "panela", "azúcar mascabado", "piloncillo", "rapadura"],
       que: "Azúcar extraído de la caña o la remolacha. Se usa para endulzar, dar textura y conservar.",
       salud: "Aporta calorías sin nutrientes. El exceso de azúcares añadidos se asocia con caries, sobrepeso, diabetes tipo 2 y enfermedad cardiovascular. La OMS recomienda que no superen el 10 % de las calorías diarias (idealmente menos del 5 %, unos 25 g)."
     },
     {
       id: "jarabe-glucosa-fructosa", nombre: "Jarabe de glucosa-fructosa", categoria: "Azúcar añadido", nivel: "evitar",
-      alias: ["jarabe de glucosa-fructosa", "jarabe de glucosa y fructosa", "jarabe de fructosa-glucosa", "jarabe de fructosa", "jarabe de maíz alto en fructosa", "jarabe de maíz de alta fructosa", "jarabe de maiz", "jarabe de maíz", "isoglucosa", "jmaf", "sirope de maíz"],
+      alias: ["jarabe de alta fructosa", "jarabe de maíz alta fructosa", "jmaf", "jarabe de glucosa-fructosa", "jarabe de glucosa y fructosa", "jarabe de fructosa-glucosa", "jarabe de fructosa", "jarabe de maíz alto en fructosa", "jarabe de maíz de alta fructosa", "jarabe de maiz", "jarabe de maíz", "isoglucosa", "jmaf", "sirope de maíz"],
       que: "Edulcorante líquido barato obtenido del almidón de maíz o trigo. Muy usado en refrescos, bollería y salsas.",
       salud: "Es azúcar añadido muy concentrado. Su consumo frecuente (sobre todo en bebidas) se relaciona con hígado graso, aumento de triglicéridos, resistencia a la insulina y obesidad."
     },
@@ -74,6 +74,12 @@
       salud: "Es fuente de azúcares (maltosa). Contiene gluten: no apto para personas celíacas salvo que se indique lo contrario."
     },
 
+    {
+      id: "dulce-leche", nombre: "Dulce de leche", categoria: "Azúcar añadido", nivel: "moderar", alergeno: "leche",
+      alias: ["dulce de leche", "dulce de leche repostero", "dulce de leche clásico"],
+      que: "Leche cocida con mucho azúcar hasta caramelizar.",
+      salud: "Aporta calcio, pero más de la mitad es azúcar añadido. Conviene tomarlo con moderación."
+    },
     // ───────────── Edulcorantes ─────────────
     {
       id: "aspartamo", nombre: "Aspartamo", e: ["E951"], categoria: "Edulcorante", nivel: "moderar",
@@ -83,7 +89,7 @@
     },
     {
       id: "acesulfamo", nombre: "Acesulfamo K", e: ["E950"], categoria: "Edulcorante", nivel: "moderar",
-      alias: ["acesulfamo k", "acesulfamo potásico", "acesulfamo-k", "acesulfame k", "acesulfamo"],
+      alias: ["acesulfame de potasio", "acesulfame potasio", "acesulfame-k", "acesulfame potásico", "acesulfamo de potasio", "acesulfamo k", "acesulfamo potásico", "acesulfamo-k", "acesulfame k", "acesulfamo"],
       que: "Edulcorante artificial sin calorías, a menudo combinado con aspartamo o sucralosa.",
       salud: "Considerado seguro por la EFSA dentro de la ingesta diaria admisible. Algunos estudios observacionales relacionan los edulcorantes artificiales con mayor riesgo cardiovascular; la evidencia no es concluyente."
     },
@@ -95,13 +101,13 @@
     },
     {
       id: "sacarina", nombre: "Sacarina", e: ["E954"], categoria: "Edulcorante", nivel: "moderar",
-      alias: ["sacarina", "sacarina sódica"],
+      alias: ["sacarina de sodio", "sacarina", "sacarina sódica"],
       que: "Uno de los edulcorantes artificiales más antiguos, unas 300 veces más dulce que el azúcar.",
       salud: "Se retiró de la lista de posibles cancerígenos en 2000 y se considera segura en dosis habituales. Puede dejar regusto metálico."
     },
     {
       id: "ciclamato", nombre: "Ciclamato", e: ["E952"], categoria: "Edulcorante", nivel: "moderar",
-      alias: ["ciclamato", "ciclamato sódico", "ácido ciclámico"],
+      alias: ["ciclamato de sodio", "ciclamato", "ciclamato sódico", "ácido ciclámico"],
       que: "Edulcorante artificial unas 30-50 veces más dulce que el azúcar.",
       salud: "Permitido en la UE con una ingesta diaria baja (7 mg/kg). Está prohibido en EE. UU. desde 1970. Es fácil superar el límite en niños que toman muchas bebidas edulcoradas."
     },
@@ -169,7 +175,7 @@
     },
     {
       id: "aceites-semillas", nombre: "Aceites de semillas (soja, maíz, cacahuete…)", categoria: "Grasa", nivel: "neutral",
-      alias: ["aceite de soja", "aceite de maíz", "aceite de algodón", "aceite de semillas", "aceite de cacahuete", "aceite de cártamo", "aceite de sésamo"],
+      alias: ["aceite de maní", "aceite de soja refinado", "aceite de girasol y soja", "aceite de soja", "aceite de maíz", "aceite de algodón", "aceite de semillas", "aceite de cacahuete", "aceite de cártamo", "aceite de sésamo"],
       que: "Aceites vegetales líquidos de diferentes semillas.",
       salud: "Ricos en grasas poliinsaturadas (omega-6). Son adecuados con moderación; no conviene reutilizarlos muchas veces para freír."
     },
@@ -181,7 +187,7 @@
     },
     {
       id: "manteca-cerdo", nombre: "Manteca de cerdo / grasa animal", categoria: "Grasa animal", nivel: "moderar",
-      alias: ["manteca de cerdo", "grasa de cerdo", "tocino", "sebo", "grasa animal", "grasa de vacuno", "lardo"],
+      alias: ["grasa bovina", "sebo vacuno", "grasa vacuna", "grasa de vaca", "manteca de cerdo", "grasa de cerdo", "tocino", "sebo", "grasa animal", "grasa de vacuno", "lardo"],
       que: "Grasa de origen animal.",
       salud: "Alta en grasa saturada y colesterol. Conviene limitarla. No apta para dietas vegetarianas ni ciertas dietas religiosas."
     },
@@ -209,7 +215,7 @@
     // ───────────── Cereales, harinas y almidones ─────────────
     {
       id: "harina-trigo", nombre: "Harina de trigo refinada", categoria: "Cereal", nivel: "neutral", alergeno: "gluten",
-      alias: ["harina de trigo", "harina", "harina de trigo refinada", "harina blanca", "sémola de trigo", "trigo", "harina de trigo enriquecida", "harina de fuerza"],
+      alias: ["harina de trigo 000", "harina de trigo 0000", "harina 000", "harina 0000", "harina de trigo tipo 000", "harina de trigo enriquecida según ley 25630", "harina de trigo", "harina", "harina de trigo refinada", "harina blanca", "sémola de trigo", "trigo", "harina de trigo enriquecida", "harina de fuerza"],
       que: "Harina obtenida del trigo sin el salvado ni el germen.",
       salud: "Aporta energía pero poca fibra; tiene un índice glucémico alto. Contiene gluten: no apta para celíacos."
     },
@@ -245,7 +251,7 @@
     },
     {
       id: "almidon", nombre: "Almidón / fécula", categoria: "Espesante", nivel: "neutral",
-      alias: ["almidón", "almidón de maíz", "almidón de patata", "almidón de trigo", "fécula", "fécula de patata", "fécula de maíz", "maicena", "almidón de tapioca", "tapioca", "almidones"],
+      alias: ["fécula de mandioca", "almidón de mandioca", "mandioca", "harina de mandioca", "almidón de maíz nativo", "almidón", "almidón de maíz", "almidón de patata", "almidón de trigo", "fécula", "fécula de patata", "fécula de maíz", "maicena", "almidón de tapioca", "tapioca", "almidones"],
       que: "Carbohidrato extraído de cereales o tubérculos, usado para espesar.",
       salud: "Aporta calorías y se digiere rápidamente. Seguro. Si es de trigo puede contener gluten."
     },
@@ -265,7 +271,7 @@
     // ───────────── Proteínas, lácteos, huevo y alérgenos ─────────────
     {
       id: "leche", nombre: "Leche y derivados", categoria: "Lácteo", nivel: "neutral", alergeno: "leche",
-      alias: ["leche", "leche desnatada", "leche entera", "leche en polvo", "leche desnatada en polvo", "leche entera en polvo", "suero de leche", "suero lácteo", "lactosuero", "suero de leche en polvo", "lactosa", "proteínas de la leche", "proteína de leche", "caseína", "caseinato", "caseinato sódico", "caseinato de sodio", "caseinato cálcico", "leche condensada", "queso", "yogur", "nata en polvo", "permeado de leche", "proteína de suero", "concentrado de proteína de suero", "suero"],
+      alias: ["leche en polvo entera", "leche en polvo descremada", "leche descremada", "leche descremada en polvo", "sólidos lácteos", "suero de queso", "crema de leche", "leche", "leche desnatada", "leche entera", "leche en polvo", "leche desnatada en polvo", "leche entera en polvo", "suero de leche", "suero lácteo", "lactosuero", "suero de leche en polvo", "lactosa", "proteínas de la leche", "proteína de leche", "caseína", "caseinato", "caseinato sódico", "caseinato de sodio", "caseinato cálcico", "leche condensada", "queso", "yogur", "nata en polvo", "permeado de leche", "proteína de suero", "concentrado de proteína de suero", "suero"],
       que: "Leche o componentes derivados (proteínas, lactosa, suero).",
       salud: "Aporta proteína de calidad y calcio. Es un alérgeno de declaración obligatoria; la lactosa causa molestias a personas intolerantes."
     },
@@ -282,8 +288,8 @@
       salud: "Proteína vegetal completa y con isoflavonas. Es un alérgeno de declaración obligatoria."
     },
     {
-      id: "cacahuete", nombre: "Cacahuete", categoria: "Fruto seco", nivel: "bueno", alergeno: "cacahuete",
-      alias: ["cacahuete", "cacahuetes", "maní", "mantequilla de cacahuete", "crema de cacahuete"],
+      id: "cacahuete", nombre: "Cacahuete", categoria: "Fruto seco", nivel: "bueno", alergeno: "maní",
+      alias: ["maní", "manies", "maníes", "pasta de maní", "manteca de maní", "mantequilla de maní", "cacahuete", "cacahuetes", "maní", "mantequilla de cacahuete", "crema de cacahuete"],
       que: "Legumbre consumida como fruto seco.",
       salud: "Aporta proteína, fibra y grasas insaturadas. Es uno de los alérgenos más graves (puede causar anafilaxia)."
     },
@@ -380,7 +386,7 @@
     },
     {
       id: "fruta", nombre: "Fruta", categoria: "Fruta", nivel: "bueno",
-      alias: ["fruta", "frutas", "manzana", "pera", "plátano", "banana", "fresa", "fresas", "frambuesa", "frambuesas", "arándano", "arándanos", "naranja", "limón", "piña", "melocotón", "mango", "uva", "uvas", "pasas", "uvas pasas", "dátil", "dátiles", "higo", "higos", "cereza", "cerezas", "albaricoque", "ciruela", "kiwi", "coco", "coco rallado", "frutos rojos", "pulpa de fruta", "puré de fruta", "fruta deshidratada"],
+      alias: ["frutilla", "frutillas", "durazno", "duraznos", "ananá", "pasas de uva", "maracuyá", "mburucuyá", "membrillo", "dulce de membrillo", "mandarina", "pomelo", "limón", "manzana deshidratada", "jugo de limón", "pulpa de durazno", "pulpa de frutilla", "fruta", "frutas", "manzana", "pera", "plátano", "banana", "fresa", "fresas", "frambuesa", "frambuesas", "arándano", "arándanos", "naranja", "limón", "piña", "melocotón", "mango", "uva", "uvas", "pasas", "uvas pasas", "dátil", "dátiles", "higo", "higos", "cereza", "cerezas", "albaricoque", "ciruela", "kiwi", "coco", "coco rallado", "frutos rojos", "pulpa de fruta", "puré de fruta", "fruta deshidratada"],
       que: "Fruta o preparado de fruta.",
       salud: "Aporta fibra, vitaminas y antioxidantes. Ojo: los zumos y concentrados de fruta cuentan como azúcares libres."
     },
@@ -392,13 +398,13 @@
     },
     {
       id: "verduras", nombre: "Verduras y hortalizas", categoria: "Verdura", nivel: "bueno",
-      alias: ["verduras", "hortalizas", "tomate", "tomates", "concentrado de tomate", "pasta de tomate", "puré de tomate", "tomate triturado", "cebolla", "cebolla en polvo", "ajo", "ajo en polvo", "pimiento", "pimientos", "zanahoria", "zanahorias", "espinaca", "espinacas", "calabacín", "berenjena", "patata", "patatas", "calabaza", "pepino", "puerro", "brócoli", "remolacha", "champiñón", "champiñones", "setas", "guisantes", "aceitunas"],
+      alias: ["choclo", "zapallo", "papa", "papas", "batata", "arvejas", "chauchas", "morrón", "pimiento morrón", "palta", "acelga", "lechuga", "repollo", "zapallito", "cebolla deshidratada", "ajo deshidratado", "tomate deshidratado", "perejil deshidratado", "verduras", "hortalizas", "tomate", "tomates", "concentrado de tomate", "pasta de tomate", "puré de tomate", "tomate triturado", "cebolla", "cebolla en polvo", "ajo", "ajo en polvo", "pimiento", "pimientos", "zanahoria", "zanahorias", "espinaca", "espinacas", "calabacín", "berenjena", "patata", "patatas", "calabaza", "pepino", "puerro", "brócoli", "remolacha", "champiñón", "champiñones", "setas", "guisantes", "aceitunas"],
       que: "Verduras u hortalizas.",
       salud: "Aportan fibra, vitaminas, minerales y antioxidantes. Base de una dieta saludable."
     },
     {
       id: "legumbres", nombre: "Legumbres", categoria: "Legumbre", nivel: "bueno",
-      alias: ["legumbres", "garbanzo", "garbanzos", "lenteja", "lentejas", "alubia", "alubias", "judías", "frijoles", "habas", "harina de garbanzo", "proteína de guisante", "harina de lenteja"],
+      alias: ["porotos", "poroto", "porotos negros", "porotos alubia", "legumbres", "garbanzo", "garbanzos", "lenteja", "lentejas", "alubia", "alubias", "judías", "frijoles", "habas", "harina de garbanzo", "proteína de guisante", "harina de lenteja"],
       que: "Semillas de leguminosas.",
       salud: "Excelente fuente de proteína vegetal, fibra, hierro y folatos. Su consumo se asocia con mejor control de glucosa y colesterol."
     },
@@ -428,7 +434,7 @@
     },
     {
       id: "cafeina", nombre: "Cafeína", categoria: "Estimulante", nivel: "moderar",
-      alias: ["cafeína", "café", "extracto de café", "guaraná", "extracto de guaraná", "extracto de té verde", "mate", "café soluble"],
+      alias: ["yerba mate", "cafeína", "café", "extracto de café", "guaraná", "extracto de guaraná", "extracto de té verde", "mate", "café soluble"],
       que: "Estimulante natural del café, té y guaraná; se añade a bebidas energéticas.",
       salud: "Hasta 400 mg/día es seguro para adultos (200 mg en embarazo). En exceso causa insomnio, ansiedad y taquicardia. No recomendada para niños."
     },
@@ -446,7 +452,7 @@
     },
     {
       id: "aroma", nombre: "Aromas", categoria: "Aroma", nivel: "neutral",
-      alias: ["aroma", "aromas", "aroma natural", "aromas naturales", "aroma natural de vainilla", "aromatizante", "saborizante", "saborizantes", "aroma idéntico al natural", "aroma artificial", "aroma de vainilla", "vainillina", "etilvainillina", "aroma de humo", "aromas de humo"],
+      alias: ["aromatizantes", "aromatizante natural", "aromatizantes naturales", "aromatizante artificial", "aromatizantes artificiales", "saborizantes naturales", "saborizantes artificiales", "saborizante natural", "saborizante artificial", "aroma natural y artificial", "aroma", "aromas", "aroma natural", "aromas naturales", "aroma natural de vainilla", "aromatizante", "saborizante", "saborizantes", "aroma idéntico al natural", "aroma artificial", "aroma de vainilla", "vainillina", "etilvainillina", "aroma de humo", "aromas de humo"],
       que: "Sustancias que dan o refuerzan el sabor. 'Natural' significa que procede de una fuente natural, no necesariamente del alimento indicado.",
       salud: "Están autorizados y evaluados. Su presencia suele indicar que el sabor no viene del ingrediente real (p. ej. 'aroma de fresa' en vez de fresa)."
     },
@@ -480,7 +486,7 @@
     },
     {
       id: "colorantes-southampton", nombre: "Colorantes azoicos (tartrazina, amarillo ocaso, azorrubina, ponceau 4R, rojo allura, amarillo de quinoleína)", e: ["E102", "E104", "E110", "E122", "E124", "E129"], categoria: "Colorante artificial", nivel: "evitar",
-      alias: ["tartrazina", "amarillo de quinoleína", "amarillo ocaso", "amarillo anaranjado s", "amarillo ocaso fcf", "azorrubina", "carmoisina", "ponceau 4r", "rojo cochinilla a", "rojo allura", "rojo allura ac"],
+      alias: ["amarillo crepúsculo", "amarillo ocaso fcf", "rojo 40", "amarillo 5", "amarillo 6", "tartrazina", "amarillo de quinoleína", "amarillo ocaso", "amarillo anaranjado s", "amarillo ocaso fcf", "azorrubina", "carmoisina", "ponceau 4r", "rojo cochinilla a", "rojo allura", "rojo allura ac"],
       que: "Colorantes sintéticos que dan colores llamativos a golosinas, refrescos y postres.",
       salud: "Un estudio de la Universidad de Southampton (2007) los relacionó con hiperactividad en niños; en la UE los productos que los contienen deben advertir: 'puede tener efectos negativos sobre la actividad y la atención de los niños'. La tartrazina puede provocar reacciones en personas sensibles a la aspirina."
     },
@@ -696,7 +702,7 @@
     // ───────────── Aditivos: gasificantes, antiaglomerantes y otros ─────────────
     {
       id: "carbonatos", nombre: "Bicarbonato y carbonatos", e: ["E500", "E501", "E503", "E504", "E170"], categoria: "Gasificante", nivel: "neutral",
-      alias: ["bicarbonato sódico", "bicarbonato de sodio", "carbonato sódico", "carbonatos de sodio", "carbonato potásico", "carbonatos de potasio", "bicarbonato amónico", "carbonatos de amonio", "carbonato amónico", "carbonato de magnesio", "carbonato magnésico", "bicarbonato", "carbonato ácido de sodio", "carbonato ácido de amonio", "carbonato ácido de potasio", "hidrogenocarbonato de sodio", "hidrogenocarbonato de amonio", "carbonato ácido sódico", "carbonato ácido amónico"],
+      alias: ["bicarbonato de amonio", "bicarbonato de potasio", "bicarbonato sódico", "bicarbonato de sodio", "carbonato sódico", "carbonatos de sodio", "carbonato potásico", "carbonatos de potasio", "bicarbonato amónico", "carbonatos de amonio", "carbonato amónico", "carbonato de magnesio", "carbonato magnésico", "bicarbonato", "carbonato ácido de sodio", "carbonato ácido de amonio", "carbonato ácido de potasio", "hidrogenocarbonato de sodio", "hidrogenocarbonato de amonio", "carbonato ácido sódico", "carbonato ácido amónico"],
       que: "Gasificantes que hacen subir masas de galletas y bizcochos.",
       salud: "Seguros. El bicarbonato sódico aporta algo de sodio."
     },
@@ -765,6 +771,7 @@
     "incluye", "trazas", "puede contener", "puede contener trazas", "puede contener trazas de", "contiene trazas de",
     "elaborado en una fábrica que", "en proporción variable", "en proporciones variables", "variable",
     "otros", "y", "o", "de", "con", "sin", "min", "mín", "mínimo", "max", "máx", "aprox",
+    "leudantes químicos", "leudante químico", "leudantes", "resaltador del sabor", "resaltadores de sabor", "acentuador de sabor", "antihumectante", "antihumectantes", "edulcorantes no nutritivos", "edulcorante no nutritivo", "edulcorantes nutritivos", "agente de firmeza", "agente de carga", "sin tacc", "tacc", "contiene derivados de", "derivados de", "derivados", "enriquecida", "fortificada", "conservadores", "acidulantes", "reguladores de la acidez", "estabilizantes", "aglutinante", "aglutinantes", "glaseante", "glaseantes", "ley", "según ley", "contiene gluten",
     "cobertura", "relleno", "masa", "base", "crema", "galleta", "chocolate con leche", "chocolate negro", "chocolate"
   ];
 

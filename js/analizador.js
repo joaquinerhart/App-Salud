@@ -95,6 +95,8 @@
   function corregirOCR(t) {
     return String(t)
       .replace(/[|¦]/g, "l")
+      .replace(/\b[lI1|]NS\b/g, "INS")
+      .replace(/\bINS\s*[-.:]?\s*(?=\d)/gi, "INS ")
       .replace(/(\p{L})0(?=\p{L})/gu, "$1o")
       .replace(/(\p{L})1(?=\p{L})/gu, "$1l")
       .replace(/\b([EeÉé])\s?[-–.]?\s?([0-9OoIlSB]{3,4})([a-fA-F]?)\b/g, (m, e, num, letra) => {
@@ -242,7 +244,8 @@
     const cubierto = new Array(s.length).fill(false);
 
     // Códigos E primero (son inequívocos)
-    const reE = /\be ?(\d{3,4})([a-f])?(?![a-z0-9])/g;
+    // Códigos E (Europa) o INS (Mercosur), p. ej. "e 150d", "ins 322i", "ins 500ii"
+    const reE = /\b(?:e|ins) ?(\d{3,4})([a-f])?(?:i{1,3}|iv|vi?)?(?![a-z0-9])/g;
     let m;
     while ((m = reE.exec(s))) {
       const code = "E" + m[1] + (m[2] || "");
@@ -265,7 +268,9 @@
         encontrados.push({ ing, termino: alias, pos: i });
       }
     }
-    return encontrados.sort((a, b) => a.pos - b.pos);
+    encontrados.sort((a, b) => a.pos - b.pos);
+    const iAroma = encontrados.findIndex((f) => f.ing && f.ing.id === "aroma" && !f.codigo);
+    return iAroma === -1 ? encontrados : encontrados.filter((f, k) => k <= iAroma || f.codigo);
   }
 
   function buscarAproximado(s) {
@@ -311,7 +316,7 @@
 
     for (const original of trocear(lista)) {
       const s = normalizar(original);
-      if (!s || palabrasFuncion.has(s) || /^sin /.test(s)) continue; // "sin gluten", "sin azúcares añadidos"
+      if (!s || palabrasFuncion.has(s) || /^sin /.test(s) || /^(segun )?ley\b/.test(s)) continue; // "sin gluten", "sin azúcares añadidos"
 
       const { texto: sCorregido, corregidas } = corregirFragmento(s);
       if (palabrasFuncion.has(sCorregido)) continue;
@@ -402,16 +407,16 @@
     let veredicto, nivel, frase;
     if (!resultados.length) {
       veredicto = "Sin resultado"; nivel = "neutral";
-      frase = "No hemos reconocido ingredientes. Prueba con otra foto.";
+      frase = "No hemos reconocido ingredientes. Probá con otra foto.";
     } else if (puntos >= 70) {
       veredicto = "Recomendado"; nivel = "bueno";
       frase = "Sus ingredientes son, en general, saludables.";
     } else if (puntos >= 40) {
       veredicto = "Poco recomendado"; nivel = "moderar";
-      frase = "Se puede tomar de vez en cuando, mejor no a diario.";
+      frase = "Se puede consumir de vez en cuando, mejor no todos los días.";
     } else {
       veredicto = "No recomendado"; nivel = "evitar";
-      frase = "Mejor elegir otra opción o tomarlo muy de vez en cuando.";
+      frase = "Mejor elegir otra opción o consumirlo muy de vez en cuando.";
     }
 
     // Motivos en lenguaje sencillo: primero lo malo, luego lo bueno

@@ -34,7 +34,7 @@ test("ignora porcentajes y palabras de función", () => {
 test("separa alérgenos y trazas", () => {
   const r = analizar("Ingredientes: leche entera, huevo. Puede contener trazas de cacahuete y soja.");
   assert.deepStrictEqual(r.alergenos, ["leche", "huevo"]);
-  assert.deepStrictEqual(r.trazas, ["cacahuete", "soja"]);
+  assert.deepStrictEqual(r.trazas, ["maní", "soja"]);
 });
 
 test("corta en la información nutricional", () => {
@@ -104,4 +104,13 @@ test("da una recomendación clara con nota sobre 10", () => {
   const galletas = analizar("harina de trigo, azúcar, aceite de palma, jarabe de glucosa-fructosa, sal, E471, aroma, E150d");
   assert.strictEqual(galletas.resumen.veredicto, "No recomendado");
   assert.ok(galletas.resumen.motivos.some((m) => m.texto.includes("ultraprocesado")));
+});
+
+test("entiende etiquetas de Argentina (códigos INS y vocabulario local)", () => {
+  const r = analizar("INGREDIENTES: harina de trigo enriquecida (según Ley 25.630: hierro, ácido fólico), azúcar, maní, " +
+    "leudantes químicos: bicarbonato de sodio (INS 500ii), emulsionante: lecitina de soja (INS 322i), colorante: caramelo IV (INS 150d), " +
+    "edulcorantes no nutritivos: acesulfame de potasio (INS 950), aroma idéntico al natural de manteca. SIN TACC: NO. Puede contener maní.");
+  assert.deepStrictEqual(r.desconocidos, []);
+  for (const id of ["carbonatos", "lecitinas", "caramelo", "acesulfamo", "cacahuete", "aroma"]) assert.ok(ids(r).includes(id), id);
+  assert.ok(!ids(r).includes("mantequilla"), "'aroma de manteca' no es manteca");
 });
