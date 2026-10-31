@@ -696,7 +696,7 @@
     // ───────────── Aditivos: gasificantes, antiaglomerantes y otros ─────────────
     {
       id: "carbonatos", nombre: "Bicarbonato y carbonatos", e: ["E500", "E501", "E503", "E504", "E170"], categoria: "Gasificante", nivel: "neutral",
-      alias: ["bicarbonato sódico", "bicarbonato de sodio", "carbonato sódico", "carbonatos de sodio", "carbonato potásico", "carbonatos de potasio", "bicarbonato amónico", "carbonatos de amonio", "carbonato amónico", "carbonato de magnesio", "carbonato magnésico", "bicarbonato", "gasificantes"],
+      alias: ["bicarbonato sódico", "bicarbonato de sodio", "carbonato sódico", "carbonatos de sodio", "carbonato potásico", "carbonatos de potasio", "bicarbonato amónico", "carbonatos de amonio", "carbonato amónico", "carbonato de magnesio", "carbonato magnésico", "bicarbonato", "carbonato ácido de sodio", "carbonato ácido de amonio", "carbonato ácido de potasio", "hidrogenocarbonato de sodio", "hidrogenocarbonato de amonio", "carbonato ácido sódico", "carbonato ácido amónico"],
       que: "Gasificantes que hacen subir masas de galletas y bizcochos.",
       salud: "Seguros. El bicarbonato sódico aporta algo de sodio."
     },

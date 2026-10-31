@@ -66,3 +66,29 @@ test("puntúa peor un producto ultraprocesado", () => {
   assert.ok(bueno.resumen.puntos >= 75);
   assert.ok(malo.resumen.ultraprocesado);
 });
+
+test("corrige palabras mal leídas por el OCR", () => {
+  const r = analizar("lngredientes: harlna de trigo, azucar, difostato disódico, lecitlna de soja, co1orante (E15Od)");
+  assert.deepStrictEqual(ids(r), ["harina-trigo", "azucar", "fosfatos", "lecitinas", "caramelo"]);
+  assert.ok(r.alergenos.includes("soja"));
+  assert.ok(r.ingredientes.find((i) => i.id === "fosfatos").aproximado);
+});
+
+test("no corrige palabras ya correctas", () => {
+  const r = analizar("sal, agua, carbonato ácido de amonio");
+  assert.deepStrictEqual(ids(r), ["sal", "agua", "carbonatos"]);
+  assert.ok(r.ingredientes.every((i) => !i.aproximado));
+});
+
+test("encuentra cabecera, trazas y fin aunque estén mal leídos", () => {
+  const r = analizar("MORNEDIENTES: harina de trigo, sal. Pusde comener vazas de huevo. BSPFORMACIÓN NUTIECIONAL por 100 g: azúcares 3 g");
+  assert.deepStrictEqual(ids(r), ["harina-trigo", "sal"]);
+  assert.deepStrictEqual(r.trazas, ["huevo"]);
+  assert.deepStrictEqual(r.desconocidos, []);
+});
+
+test("ignora palabras de función mal leídas y arregla E1500", () => {
+  const r = analizar("gauficantes (bicarbonato sódico), emuigentes, colorante (E1500)");
+  assert.deepStrictEqual(ids(r), ["carbonatos", "caramelo"]);
+  assert.deepStrictEqual(r.desconocidos, []);
+});

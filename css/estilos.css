@@ -75,6 +75,12 @@ textarea:focus { outline: 2px solid var(--verde); border-color: transparent; }
 .barra div { height: 100%; width: 0; background: var(--verde); transition: width .2s; }
 #texto-progreso { font-size: .9rem; color: var(--suave); }
 
+.zona-recorte { margin: 14px 0; display: grid; gap: 10px; }
+.paso-recorte { margin: 0; font-size: .95rem; }
+.marco-recorte { display: flex; justify-content: center; background: #000; border-radius: 10px; overflow: hidden; }
+#lienzo-recorte { touch-action: none; cursor: crosshair; max-width: 100%; display: block; }
+.boton:disabled { opacity: .6; cursor: progress; }
+
 /* Colores por nivel */
 .nivel-bueno { --c: var(--bueno); }
 .nivel-neutral { --c: var(--neutral); }
