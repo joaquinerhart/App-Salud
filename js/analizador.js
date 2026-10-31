@@ -363,11 +363,16 @@
     // ¿La lectura es fiable? Si hay pocos ingredientes reconocidos o mucho texto sin sentido, no damos nota.
     const letrasDesconocidas = desconocidos.reduce((n, d) => n + d.length, 0);
     const letrasReconocidas = resultados.reduce((n, r) => n + r.terminos.join(" ").length, 0);
-    const fiable = resultados.length >= 3 && desconocidos.length <= Math.max(2, resultados.length * 0.6)
+    // Proporción de palabras de la lista que son palabras reales de etiquetas (detecta lecturas con basura)
+    const palabrasLista = normalizar(lista).split(/[^a-z0-9ñ]+/).filter((w) => w.length >= 3 && !/\d/.test(w));
+    const conocidas = palabrasLista.filter((w) => vocabulario.has(w) || corregirPalabra(w)).length;
+    const proporcionConocidas = palabrasLista.length ? conocidas / palabrasLista.length : 0;
+    const fiable = proporcionConocidas >= 0.7 && resultados.length >= 3 && desconocidos.length <= Math.max(2, resultados.length * 0.6)
       && letrasDesconocidas <= letrasReconocidas * 1.5;
 
     return {
       fiable,
+      proporcionConocidas,
       textoIngredientes: lista,
       ingredientes: resultados,
       desconocidos,
