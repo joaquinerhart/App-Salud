@@ -114,3 +114,19 @@ test("entiende etiquetas de Argentina (códigos INS y vocabulario local)", () =>
   for (const id of ["carbonatos", "lecitinas", "caramelo", "acesulfamo", "cacahuete", "aroma"]) assert.ok(ids(r).includes(id), id);
   assert.ok(!ids(r).includes("mantequilla"), "'aroma de manteca' no es manteca");
 });
+
+test("etiqueta real: milanesa de soja (Argentina)", () => {
+  const r = analizar("INGREDIENTES: relleno (agua, texturizado de soja, almidón, gluten de trigo, harina de trigo tipo 000 enriquecida según Ley 25.630 (*), " +
+    "leche en polvo descremada, fibra de trigo, sal, perejil, aromatizantes/saborizantes, resaltador de sabor: glutamato monosódico), rebozado (pan rallado, " +
+    "aceite de girasol, agua, rebozador, harina de trigo tipo 000 enriquecida según Ley 25.630 (*), sal). CONTIENE LECHE, DERIVADOS DE SOJA Y DE TRIGO. " +
+    "PUEDE CONTENER AVENA Y HUEVO. (*) sulfato ferroso: 30 mg/kg. 1 milanesa gratis en relación al precio por unidad. Molinos Río de la Plata S.A.");
+  assert.ok(r.fiable);
+  assert.deepStrictEqual(r.desconocidos, []);
+  assert.strictEqual(r.resumen.veredicto, "Poco recomendado");
+  assert.ok(r.trazas.includes("huevo"));
+});
+
+test("no da nota si la lectura es basura", () => {
+  const r = analizar("INGREDIENTES: relleno (apar, testurzado de me aman de go, hanna de 000 enriquecida, leche en e e dm ll Iromatizantes, aborn mala aber gone pon a NA Bncdor 1ONTa de Igo que La a Ub es TT mea mt REN Y 0 M9 como MOCINE y mas viomna 37 Soy Sal Pulede ca más");
+  assert.strictEqual(r.fiable, false);
+});

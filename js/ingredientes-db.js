@@ -215,7 +215,7 @@
     // ───────────── Cereales, harinas y almidones ─────────────
     {
       id: "harina-trigo", nombre: "Harina de trigo refinada", categoria: "Cereal", nivel: "neutral", alergeno: "gluten",
-      alias: ["harina de trigo 000", "harina de trigo 0000", "harina 000", "harina 0000", "harina de trigo tipo 000", "harina de trigo enriquecida según ley 25630", "harina de trigo", "harina", "harina de trigo refinada", "harina blanca", "sémola de trigo", "trigo", "harina de trigo enriquecida", "harina de fuerza"],
+      alias: ["pan rallado", "rebozador", "galleta molida", "pan molido", "harina de trigo tipo 0000", "harina de trigo 000", "harina de trigo 0000", "harina 000", "harina 0000", "harina de trigo tipo 000", "harina de trigo enriquecida según ley 25630", "harina de trigo", "harina", "harina de trigo refinada", "harina blanca", "sémola de trigo", "trigo", "harina de trigo enriquecida", "harina de fuerza"],
       que: "Harina obtenida del trigo sin el salvado ni el germen.",
       salud: "Aporta energía pero poca fibra; tiene un índice glucémico alto. Contiene gluten: no apta para celíacos."
     },
@@ -283,7 +283,7 @@
     },
     {
       id: "soja", nombre: "Soja", categoria: "Legumbre", nivel: "neutral", alergeno: "soja",
-      alias: ["soja", "soya", "harina de soja", "proteína de soja", "proteína de soja aislada", "aislado de proteína de soja", "salsa de soja", "bebida de soja", "tofu"],
+      alias: ["texturizado de soja", "proteína texturizada de soja", "soja texturizada", "proteína de soja texturizada", "texturizado de soya", "soja", "soya", "harina de soja", "proteína de soja", "proteína de soja aislada", "aislado de proteína de soja", "salsa de soja", "bebida de soja", "tofu"],
       que: "Legumbre o derivados de ella.",
       salud: "Proteína vegetal completa y con isoflavonas. Es un alérgeno de declaración obligatoria."
     },
@@ -466,7 +466,7 @@
     },
     {
       id: "minerales", nombre: "Minerales añadidos", categoria: "Minerales", nivel: "bueno",
-      alias: ["minerales", "hierro", "calcio", "zinc", "magnesio", "yodo", "fosfato cálcico", "carbonato cálcico", "carbonato de calcio", "fumarato ferroso", "sulfato ferroso", "pirofosfato férrico", "óxido de zinc", "yoduro potásico", "citrato de calcio"],
+      alias: ["sulfato ferroso", "hierro reducido", "gluconato ferroso", "minerales", "hierro", "calcio", "zinc", "magnesio", "yodo", "fosfato cálcico", "carbonato cálcico", "carbonato de calcio", "fumarato ferroso", "sulfato ferroso", "pirofosfato férrico", "óxido de zinc", "yoduro potásico", "citrato de calcio"],
       que: "Minerales añadidos para enriquecer el producto.",
       salud: "Útiles para prevenir carencias (hierro, calcio, yodo). En exceso, el hierro puede causar molestias digestivas."
     },
@@ -772,6 +772,7 @@
     "elaborado en una fábrica que", "en proporción variable", "en proporciones variables", "variable",
     "otros", "y", "o", "de", "con", "sin", "min", "mín", "mínimo", "max", "máx", "aprox",
     "leudantes químicos", "leudante químico", "leudantes", "resaltador del sabor", "resaltadores de sabor", "acentuador de sabor", "antihumectante", "antihumectantes", "edulcorantes no nutritivos", "edulcorante no nutritivo", "edulcorantes nutritivos", "agente de firmeza", "agente de carga", "sin tacc", "tacc", "contiene derivados de", "derivados de", "derivados", "enriquecida", "fortificada", "conservadores", "acidulantes", "reguladores de la acidez", "estabilizantes", "aglutinante", "aglutinantes", "glaseante", "glaseantes", "ley", "según ley", "contiene gluten",
+    "rebozado", "rebozador de", "cobertura de", "como hierro", "contiene leche",
     "cobertura", "relleno", "masa", "base", "crema", "galleta", "chocolate con leche", "chocolate negro", "chocolate"
   ];
 

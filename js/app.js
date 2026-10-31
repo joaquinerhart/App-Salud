@@ -94,14 +94,94 @@
     };
   }
 
+  // ── Lectura con Claude (cuando la app se abre dentro de Claude) ──────────
+  // Claude lee fotos reales (borrosas, letra condensada, envases) mucho mejor que Tesseract.
+  let lectorClaude = null; // promesa → { sample, max } o null
+  let claudeNoDisponible = false;
+  function obtenerLectorClaude() {
+    if (claudeNoDisponible || !window.claude || typeof window.claude.use !== "function") return Promise.resolve(null);
+    lectorClaude ??= window.claude.use("sample")
+      .then(async (sample) => {
+        if (!sample) return null;
+        const lim = await sample.limits().catch(() => null);
+        return lim && lim.images ? { sample, max: lim.images.maxCount || 1 } : null;
+      })
+      .catch(() => null);
+    return lectorClaude;
+  }
+  obtenerLectorClaude(); // lo vamos preparando mientras el usuario saca la foto
+
+  function recorteABlob(x, y, w, h, maxLado = 2400) {
+    const sx = Math.round(x * fuente.width), sy = Math.round(y * fuente.height);
+    const sw = Math.round(w * fuente.width), sh = Math.round(h * fuente.height);
+    const esc = Math.min(1, maxLado / Math.max(sw, sh));
+    const c = document.createElement("canvas");
+    c.width = Math.round(sw * esc); c.height = Math.round(sh * esc);
+    c.getContext("2d").drawImage(fuente, sx, sy, sw, sh, 0, 0, c.width, c.height);
+    return new Promise((r) => c.toBlob(r, "image/jpeg", 0.9));
+  }
+
+  const INSTRUCCIONES_LECTURA = `Te paso la foto de la etiqueta de un producto alimenticio (puede ser de Argentina u otro país de habla hispana). Si hay más de una imagen, la primera es la foto completa y las otras son recortes ampliados de la misma foto (mitad de arriba y mitad de abajo) para leer mejor la letra chica.
+
+Transcribí EXACTAMENTE la lista de ingredientes tal como está escrita: desde la palabra "Ingredientes" hasta el final de la lista, con sus paréntesis, porcentajes y códigos (INS o E), y las frases de alérgenos ("Contiene…", "Puede contener…"). No incluyas la información nutricional, los datos del fabricante, promociones, fechas ni el modo de conservación. Si una palabra se ve borrosa, escribí la más probable para una etiqueta de alimentos, pero no inventes ingredientes que no se vean.
+
+Respondé solo con este JSON:
+{"hayIngredientes": true, "producto": "nombre del producto si se ve, si no vacío", "ingredientes": "Ingredientes: …", "legibilidad": "buena" | "parcial" | "mala"}`;
+
+  let ctlClaude = null;
+  async function leerConClaude(lector) {
+    const imagenes = [await recorteABlob(sel.x, sel.y, sel.w, sel.h)];
+    if (lector.max >= 3 && sel.h * fuente.height > 700) {
+      imagenes.push(await recorteABlob(sel.x, sel.y, sel.w, sel.h * 0.55));
+      imagenes.push(await recorteABlob(sel.x, sel.y + sel.h * 0.45, sel.w, sel.h * 0.55));
+    }
+    ctlClaude = new AbortController();
+    return lector.sample.json(INSTRUCCIONES_LECTURA, {
+      images: imagenes, modelTier: "default", effort: "low", signal: ctlClaude.signal,
+    });
+  }
+
   async function leerImagen() {
     if (!fuente) return;
     cancelado = false;
     vista.src = fuente.toDataURL("image/jpeg", 0.6);
     progreso(0, "Leyendo la etiqueta…");
     mostrar("leyendo");
+    await new Promise((r) => setTimeout(r, 50)); // deja pintar la pantalla
+
+    // 1º intento: Claude
+    const lector = await obtenerLectorClaude();
+    if (lector && !cancelado) {
+      barra.parentElement.classList.add("indeterminada");
+      txtProgreso.textContent = "Claude está leyendo la etiqueta… (puede tardar unos segundos)";
+      try {
+        const r = await leerConClaude(lector);
+        barra.parentElement.classList.remove("indeterminada");
+        if (cancelado) return;
+        const ing = r && typeof r.ingredientes === "string" ? r.ingredientes.trim() : "";
+        if (!r || r.hayIngredientes === false || ing.length < 5) {
+          alertaInicio("No encontramos una lista de ingredientes en la foto. Sacala de nuevo apuntando a la parte que dice «Ingredientes».");
+          return;
+        }
+        producto = typeof r.producto === "string" ? r.producto.trim() : "";
+        legibilidad = r.legibilidad;
+        texto.value = /ingredient/i.test(ing.slice(0, 20)) ? ing : "Ingredientes: " + ing;
+        analizarYMostrar();
+        return;
+      } catch (e) {
+        barra.parentElement.classList.remove("indeterminada");
+        if (cancelado || (e && e.code === "cancelled")) return;
+        console.warn("Lectura con Claude no disponible:", e && e.code, e && e.message);
+        if (e && ["not_granted", "sampling_disabled", "images_unavailable", "not_declared", "capability_disabled", "capability_removed"].includes(e.code)) {
+          claudeNoDisponible = true;
+        }
+        // seguimos con el lector del teléfono
+      }
+    }
+
+    // Respaldo: Tesseract en el propio teléfono
     try {
-      await new Promise((r) => setTimeout(r, 50)); // deja pintar la pantalla
+      progreso(0, "Leyendo la etiqueta…");
       const recortada = !(sel.w > 0.98 && sel.h > 0.98);
       const { grises, binaria } = Imagen.prepararParaOcr(fuente, sel);
       const w = await obtenerWorker();
@@ -120,18 +200,21 @@
       }
       if (cancelado) return;
 
+      producto = "";
+      legibilidad = "";
+      texto.value = mejor.texto;
       if (!mejor.texto || !mejor.ingredientes) {
-        texto.value = mejor.texto;
-        alertaInicio("No hemos podido leer los ingredientes. Acercate más a la lista, con buena luz y sin reflejos.");
+        alertaInicio("No pudimos leer los ingredientes. Acercate más a la lista, con buena luz, sin reflejos y con la foto bien enfocada.");
         return;
       }
-      texto.value = mejor.texto;
       analizarYMostrar();
     } catch (err) {
       console.error(err);
       if (!cancelado) alertaInicio("Error: " + (err.message || "no se pudo leer la foto"));
     }
   }
+  let producto = "";
+  let legibilidad = "";
 
   function abrirRecorte() {
     if (!imagenOriginal) return;
@@ -232,6 +315,16 @@
   function pintarVeredicto(r) {
     const { resumen } = r;
     const v = $("#veredicto");
+    if (!r.fiable) {
+      v.className = "veredicto nivel-neutral";
+      v.replaceChildren(
+        el("div", "veredicto-icono", "?"),
+        el("p", "veredicto-titulo", "No se pudo leer bien"),
+        el("p", "veredicto-frase", "La foto no se leyó con claridad, así que preferimos no darte una nota que podría estar equivocada. "
+          + "Sacá otra foto más de cerca, enfocada y con buena luz, o corregí el texto abajo en «¿Se leyó mal la etiqueta?»."),
+      );
+      return;
+    }
     v.className = "veredicto nivel-" + resumen.nivel;
     v.replaceChildren();
     const icono = el("div", "veredicto-icono", ICONOS[resumen.nivel]);
@@ -241,7 +334,11 @@
       el("span", "nota-num", r.ingredientes.length ? resumen.nota.toLocaleString("es", { maximumFractionDigits: 1 }) : "–"),
       el("span", "nota-max", "/10"),
     );
+    if (producto) v.append(el("p", "veredicto-producto", producto));
     v.append(icono, el("p", "veredicto-titulo", resumen.veredicto), nota, el("p", "veredicto-frase", resumen.frase));
+    if (legibilidad === "parcial" || legibilidad === "mala") {
+      v.append(el("p", "veredicto-nota-lectura", "Parte de la etiqueta se veía borrosa: revisá la lista de ingredientes por las dudas."));
+    }
   }
 
   function pintarMotivos(r) {
@@ -302,6 +399,8 @@
     pintarMotivos(r);
     pintarIngredientes(r);
     for (const d of pantallas.resultado.querySelectorAll("details.plegable")) d.open = false;
+    if (!r.fiable) $("#caja-corregir").open = true;
+    $("#motivos-caja").hidden = !r.fiable;
     mostrar("resultado");
   }
 
@@ -317,16 +416,18 @@
   $("#btn-analizar-manual").addEventListener("click", () => {
     texto.value = $("#texto-manual").value;
     imagenOriginal = null;
+    producto = ""; legibilidad = "";
     $("#btn-recortar").hidden = true;
     analizarYMostrar();
   });
   $("#btn-ejemplo").addEventListener("click", () => {
     texto.value = EJEMPLO;
     imagenOriginal = null;
+    producto = ""; legibilidad = "";
     $("#btn-recortar").hidden = true;
     analizarYMostrar();
   });
-  $("#btn-analizar").addEventListener("click", analizarYMostrar);
+  $("#btn-analizar").addEventListener("click", () => { legibilidad = ""; analizarYMostrar(); });
   $("#btn-recortar").addEventListener("click", abrirRecorte);
   $("#btn-leer").addEventListener("click", leerImagen);
   $("#btn-girar").addEventListener("click", () => {
@@ -336,7 +437,7 @@
     cargarLienzo();
   });
   $("#btn-volver-resultado").addEventListener("click", () => mostrar("resultado"));
-  $("#btn-cancelar").addEventListener("click", () => { cancelado = true; mostrar("inicio"); });
+  $("#btn-cancelar").addEventListener("click", () => { cancelado = true; ctlClaude?.abort(); mostrar("inicio"); });
   $("#btn-otro").addEventListener("click", () => $("#input-camara").click());
   window.addEventListener("resize", () => { if (fuente && !pantallas.recorte.hidden) cargarLienzo(); });
 })();

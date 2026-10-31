@@ -203,7 +203,8 @@
       let finTr = resto.search(/\.\s|\.$|$/);
       if (resto.length - finTr < 120) finTr = resto.length;
       trazas = resto.slice(0, finTr);
-      lista = lista.slice(0, a) + " " + resto.slice(trazas.length);
+      // Lo que viene después de "Puede contener…" (notas al pie, promociones, fabricante) no son ingredientes
+      lista = lista.slice(0, a);
     }
     return { lista: lista.trim(), trazas: trazas.trim() };
   }
@@ -359,7 +360,14 @@
       for (const a of lista) if (!alergenos.includes(a)) alergenos.push(a);
     }
 
+    // ¿La lectura es fiable? Si hay pocos ingredientes reconocidos o mucho texto sin sentido, no damos nota.
+    const letrasDesconocidas = desconocidos.reduce((n, d) => n + d.length, 0);
+    const letrasReconocidas = resultados.reduce((n, r) => n + r.terminos.join(" ").length, 0);
+    const fiable = resultados.length >= 3 && desconocidos.length <= Math.max(2, resultados.length * 0.6)
+      && letrasDesconocidas <= letrasReconocidas * 1.5;
+
     return {
+      fiable,
       textoIngredientes: lista,
       ingredientes: resultados,
       desconocidos,
@@ -432,6 +440,14 @@
     if (grasas.length) malos.push("Tiene grasas poco saludables (" + grasas.map((g) => NOMBRE_GRASA[g.id]).join(", ") + ")");
     if (aditivos.length >= 4) malos.push(`Lleva muchos aditivos (${aditivos.length})`);
     if (resultados.some((r) => r.categoria === "Edulcorante") && malos.length < 4) malos.push("Lleva edulcorantes");
+
+    // Si hay pocos motivos, contamos también los ingredientes "a moderar" más importantes
+    for (const r of resultados) {
+      if (malos.length >= 3) break;
+      if (r.nivel !== "moderar" || r.categoria === "Azúcar añadido" || r.id === "sal" && r.posicion < 3) continue;
+      if (grasas.includes(r) || r.categoria === "Edulcorante") continue;
+      malos.push("Lleva " + minus(r.nombre.split(" (")[0]));
+    }
 
     const buenos = [];
     const principalesBuenos = resultados.filter((r) => r.nivel === "bueno" && r.posicion < 3);
