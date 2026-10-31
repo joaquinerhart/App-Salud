@@ -1,0 +1,10 @@
+{
+  "appId": "com.nutrilog.app",
+  "appName": "NutriLog",
+  "webDir": "www",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#f2f6f1",
+    "limitsNavigationsToAppBoundDomains": false
+  }
+}

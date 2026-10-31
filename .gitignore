@@ -1,1 +1,6 @@
 node_modules/
+www/
+servidor/node_modules/
+servidor/dist/
+servidor/.wrangler/
+servidor/.dev.vars

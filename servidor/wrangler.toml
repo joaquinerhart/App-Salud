@@ -1,0 +1,22 @@
+name = "nutrilog-servidor"
+main = "src/index.ts"
+compatibility_date = "2025-09-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Límite de uso: como máximo 15 lecturas por minuto por cada IP.
+# Protege tu saldo de la API si alguien intenta abusar del servidor.
+[[ratelimits]]
+name = "LIMITE"
+namespace_id = "1001"
+
+  [ratelimits.simple]
+  limit = 15
+  period = 60
+
+[vars]
+# Orígenes web extra permitidos (además de la app de iPhone), separados por comas.
+ORIGENES_EXTRA = "https://joaquinerhart.github.io"
+# MODELO = "claude-opus-5-5"
+
+# La clave de la API NO va acá. Se carga como secreto con:
+#   npx wrangler secret put ANTHROPIC_API_KEY

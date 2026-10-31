@@ -3,9 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>App Salud</title>
+  <title>NutriLog</title>
   <meta name="description" content="Sacá una foto de los ingredientes de un alimento y descubrí si es recomendable para tu salud.">
   <meta name="theme-color" content="#17804f">
+  <meta name="apple-mobile-web-app-title" content="NutriLog">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,7 +19,10 @@
     <div class="contenedor cabecera-fila">
       <button type="button" class="marca" id="btn-inicio" aria-label="Ir al inicio">
         <svg class="marca-icono" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="currentColor"/><path d="M9 21c0-7 5-12 14-12 0 9-5 14-12 14l-2 2" fill="none" stroke="var(--sobre-marca)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 20l6-6" stroke="var(--sobre-marca)" stroke-width="2.4" stroke-linecap="round"/></svg>
-        <span>App Salud</span>
+        <span>NutriLog</span>
+      </button>
+      <button type="button" class="boton-info" id="btn-acerca" aria-label="Cómo calculamos la nota">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 11v6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="7.6" r="1.3" fill="currentColor"/></svg>
       </button>
     </div>
   </header>
@@ -156,8 +160,53 @@
       </div>
     </section>
 
-    <p class="aviso-legal">Orientativo, basado en la EFSA, la OMS y la IARC. No reemplaza a un profesional de la salud. Si tenés alergias, revisá siempre la etiqueta.</p>
+    <!-- Acerca de / metodología -->
+    <section id="pantalla-acerca" class="pantalla acerca" hidden>
+      <div>
+        <p class="eyebrow">Acerca de NutriLog</p>
+        <h1>Cómo calculamos la nota</h1>
+      </div>
+      <div class="caja texto-largo">
+        <h2>Qué hace NutriLog</h2>
+        <p>Lee la lista de ingredientes de la etiqueta y busca cada ingrediente y aditivo (códigos INS o E) en una base de datos con más de 120 entradas. Cada uno tiene un nivel: <strong>bueno</strong>, <strong>normal</strong>, <strong>moderar</strong> o <strong>evitar</strong>.</p>
+        <h2>La nota del 0 al 10</h2>
+        <ul>
+          <li>Todo producto empieza con 10.</li>
+          <li>Resta puntos por cada ingrediente a moderar o evitar, y resta más si está entre los tres primeros de la lista (son los que más cantidad hay).</li>
+          <li>Suma un poco por ingredientes beneficiosos.</li>
+          <li>Resta si parece ultraprocesado (varios aditivos o azúcares añadidos de distintos tipos).</li>
+          <li>Un ultraprocesado o un producto con algo «a evitar» nunca sale «Recomendado».</li>
+        </ul>
+        <p>De 7 a 10: <strong>Recomendado</strong>. De 4 a 6,9: <strong>Poco recomendado</strong>. Menos de 4: <strong>No recomendado</strong>.</p>
+        <h2>Fuentes</h2>
+        <ul>
+          <li>Organización Mundial de la Salud (OMS): recomendaciones de azúcares libres y sodio.</li>
+          <li>Autoridad Europea de Seguridad Alimentaria (EFSA): evaluaciones de aditivos.</li>
+          <li>Agencia Internacional de Investigación sobre el Cáncer (IARC): clasificaciones de carcinogenicidad.</li>
+          <li>Ley 27.642 de Promoción de la Alimentación Saludable (Argentina) y Código Alimentario Argentino.</li>
+        </ul>
+        <h2>Límites</h2>
+        <p>La nota es orientativa: no tiene en cuenta las cantidades exactas de la tabla nutricional ni tu situación personal. No es un consejo médico. Si tenés alergias, una enfermedad o una dieta especial, consultá con un profesional y revisá siempre la etiqueta original.</p>
+        <h2>Privacidad</h2>
+        <p>Tu historial queda guardado solo en tu teléfono. Para leer la etiqueta, la foto se envía a un servicio de inteligencia artificial (Claude, de Anthropic) y no se guarda. <a href="https://joaquinerhart.github.io/App-Salud/privacidad.html" target="_blank" rel="noopener">Política de privacidad</a>.</p>
+      </div>
+      <button type="button" class="boton boton-ancho" id="btn-acerca-volver">Volver</button>
+    </section>
+
+    <p class="aviso-legal">Orientativo, basado en la EFSA, la OMS y la IARC. No reemplaza a un profesional de la salud. Si tenés alergias, revisá siempre la etiqueta. <button type="button" class="enlace enlace-chico" onclick="document.getElementById('btn-acerca').click()">Cómo calculamos la nota</button></p>
   </main>
+
+  <dialog id="dialogo-consentimiento" class="dialogo">
+    <form method="dialog">
+      <h2>Antes de escanear</h2>
+      <p>Para leer la etiqueta, NutriLog envía la foto a <strong>Claude</strong>, un servicio de inteligencia artificial de la empresa Anthropic. La foto se usa solo para leer los ingredientes y no se guarda.</p>
+      <p class="ayuda">Si no aceptás, la app usa un lector dentro del teléfono, que funciona sin internet pero es bastante menos preciso.</p>
+      <div class="dialogo-acciones">
+        <button type="submit" value="si" class="boton boton-principal boton-ancho">Aceptar y continuar</button>
+        <button type="submit" value="no" class="boton boton-ancho">Usar solo el lector del teléfono</button>
+      </div>
+    </form>
+  </dialog>
 
   <template id="plantilla-ingrediente">
     <li class="ingrediente">
@@ -174,6 +223,7 @@
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js" defer></script>
   <script src="js/ingredientes-db.js" defer></script>
   <script src="js/analizador.js" defer></script>
+  <script src="js/prompts.js" defer></script>
   <script src="js/imagen.js" defer></script>
   <script src="js/app.js" defer></script>
 </body>

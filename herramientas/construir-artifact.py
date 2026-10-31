@@ -30,8 +30,8 @@ window.OCR_OPCIONES = {
 };
 </script>
 """
-scripts = "".join("<script>\n" + leer(f) + "\n</script>\n" for f in ["js/ingredientes-db.js", "js/analizador.js", "js/imagen.js", "js/app.js"])
-pagina = ('<meta charset="utf-8">\n<title>App Salud</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n'
+scripts = "".join("<script>\n" + leer(f) + "\n</script>\n" for f in ["js/ingredientes-db.js", "js/analizador.js", "js/prompts.js", "js/imagen.js", "js/app.js"])
+pagina = ('<meta charset="utf-8">\n<title>NutriLog</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n'
           + FUENTES + "<style>\n" + css + "</style>\n" + cuerpo +
           '<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>\n' + ocr + scripts)
 open(os.path.join(salida, "index.html"), "w", encoding="utf-8").write(pagina)

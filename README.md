@@ -1,43 +1,35 @@
-# App Salud · Lector de ingredientes
+# NutriLog
 
-Web app (funciona en el móvil): sacas una foto de los ingredientes de un alimento y te dice si es **Recomendado, Poco recomendado o No recomendado** para tu salud, con una **nota sobre 10** y los motivos. También explica qué es cada ingrediente.
+Sacás una foto de la lista de ingredientes de un alimento y NutriLog te dice si es **Recomendado, Poco recomendado o No recomendado** para tu salud. Te da una **nota del 0 al 10**, los motivos, los alérgenos y una explicación de cada ingrediente.
 
-## Cómo funciona
-
-1. **Haz una foto** de la etiqueta (o sube una imagen, o pega el texto).
-2. El texto se lee con OCR ([Tesseract.js](https://github.com/naptha/tesseract.js)) **en tu propio dispositivo**: la imagen no se envía a ningún servidor.
-3. Cada ingrediente se cruza con una base de datos de ~120 ingredientes y aditivos (incluidos los códigos E) y se muestra:
-   - qué es y para qué se usa,
-   - su efecto en la salud (según EFSA, OMS e IARC),
-   - una valoración: **Beneficioso / Neutral / Con moderación / Mejor evitar**.
-4. Resumen con puntuación 0-100, alérgenos (y trazas), azúcares añadidos "camuflados", aviso de ultraprocesado y de colorantes que afectan a la atención de los niños.
-
-El texto leído se puede corregir antes de analizar, y el analizador tolera pequeños errores del OCR.
-
-## Probarla
-
-Es una página estática, no necesita servidor propio ni claves:
-
-```bash
-npm start          # sirve la carpeta en http://localhost:8080
-# o simplemente: python3 -m http.server 8080
-```
-
-Para usarla desde el móvil, publícala con **GitHub Pages** (Settings → Pages → rama del proyecto, carpeta `/`).
-La cámara del móvil requiere HTTPS (GitHub Pages ya lo da).
-
-## Tests
-
-```bash
-npm test
-```
+- Lee etiquetas de Argentina (códigos INS, vocabulario local) y de otros países hispanohablantes (códigos E).
+- La foto la lee **Claude**. Sin conexión usa Tesseract, un lector dentro del teléfono, menos preciso.
+- La nota la calcula la app con una base de datos de más de 120 ingredientes y aditivos. Los ingredientes desconocidos se los pregunta a Claude y los recuerda.
 
 ## Estructura
 
-- `index.html`: interfaz
-- `css/estilos.css`: estilos (modo claro/oscuro)
-- `js/ingredientes-db.js`: base de datos de ingredientes y aditivos
-- `js/analizador.js`: extracción y análisis de la lista de ingredientes (funciona también en Node)
-- `js/app.js`: cámara, OCR y pintado de resultados
+| Carpeta / archivo | Qué es |
+|---|---|
+| `index.html`, `css/`, `js/` | La app (HTML + JavaScript, sin frameworks) |
+| `js/ingredientes-db.js` | Base de datos de ingredientes y aditivos |
+| `js/analizador.js` | Lee la lista y calcula la nota (también corre en Node) |
+| `js/prompts.js` | Instrucciones para Claude (las usan la app y el servidor) |
+| `js/imagen.js` | Mejora la foto para el lector del teléfono |
+| `servidor/` | Servidor (Cloudflare Worker) que llama a Claude sin poner la clave en la app |
+| `ios/` | Proyecto de Xcode de la app de iPhone (Capacitor) |
+| `herramientas/construir-www.mjs` | Arma `www/`, la versión que va dentro de la app (fuentes y lector incluidos) |
+| `app-store/` | Textos y capturas para la App Store |
+| `privacidad.html`, `soporte.html` | Páginas que pide Apple (se publican con GitHub Pages) |
+| `PUBLICAR-EN-APP-STORE.md` | **Guía paso a paso para publicar** |
 
-> Información orientativa. No sustituye el consejo de un profesional sanitario.
+## Comandos
+
+```bash
+npm install
+npm test          # pruebas del analizador
+npm start         # la app web en http://localhost:8080
+npm run build     # arma www/
+npm run ios       # arma, copia al proyecto de iOS y abre Xcode (necesita un Mac)
+```
+
+> NutriLog es orientativa y no reemplaza a un profesional de la salud.

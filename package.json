@@ -1,10 +1,26 @@
 {
-  "name": "app-salud",
+  "name": "nutrilog",
   "version": "1.0.0",
-  "description": "Lee la etiqueta de un alimento y explica cada ingrediente y su efecto en la salud",
+  "description": "NutriLog: sacá una foto de los ingredientes de un alimento y descubrí si es recomendable para tu salud",
   "private": true,
   "scripts": {
     "start": "npx --yes serve -l 8080 .",
-    "test": "node --test tests/*.test.js"
+    "test": "node --test tests/*.test.js",
+    "build": "node herramientas/construir-www.mjs",
+    "ios": "npm run build && npx cap sync ios && npx cap open ios",
+    "sync": "npm run build && npx cap sync"
+  },
+  "dependencies": {
+    "@capacitor/core": "^8.6.0",
+    "@capacitor/ios": "^8.6.0",
+    "@fontsource-variable/bricolage-grotesque": "^5.3.0",
+    "@fontsource-variable/figtree": "^5.3.0",
+    "@tesseract.js-data/spa": "^1.0.0",
+    "tesseract.js": "5.1.1",
+    "tesseract.js-core": "5.1.1"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^4.0.0",
+    "@capacitor/cli": "^8.6.0"
   }
 }

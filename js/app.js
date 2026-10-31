@@ -7,6 +7,7 @@
     leyendo: $("#pantalla-leyendo"),
     recorte: $("#pantalla-recorte"),
     resultado: $("#pantalla-resultado"),
+    acerca: $("#pantalla-acerca"),
   };
   function mostrar(nombre) {
     for (const [k, el] of Object.entries(pantallas)) el.hidden = k !== nombre;
@@ -72,6 +73,7 @@
     sel = { x: 0, y: 0, w: 1, h: 1 };
     fuente = Imagen.girar(imagenOriginal, giro);
     $("#btn-recortar").hidden = false;
+    await pedirConsentimiento();
     leerImagen();
   }
 
@@ -94,30 +96,102 @@
     };
   }
 
-  // ── Lectura con Claude (cuando la app se abre dentro de Claude) ──────────
+  // ── Lectura con Claude ──────────────────────────────────────────────────
   // Claude lee fotos reales (borrosas, letra condensada, envases) mucho mejor que Tesseract.
-  let lectorClaude = null; // promesa → { sample, max } o null
+  // Dos formas de llegar a Claude, con la misma interfaz { tipo, max, leer(imagenes, signal), clasificar(textos, signal) }:
+  //  · "artifact": la app abierta dentro de Claude (usa la cuenta de quien la mira)
+  //  · "servidor": la app de iPhone, a través del servidor de NutriLog (ver carpeta servidor/)
+  const { INSTRUCCIONES_LECTURA, promptClasificar, ALERGENOS_VALIDOS } = window.NutriLogPrompts;
+  const CONFIG = window.NUTRILOG_CONFIG || {};
+  let lectorClaude = null;
   let claudeNoDisponible = false;
   let motivoSinClaude = ""; // por qué no se pudo usar Claude (se muestra en el resultado)
+
+  function lectorArtifact(sample, max) {
+    return {
+      tipo: "artifact", max,
+      leer: (imagenes, signal) => sample.json(INSTRUCCIONES_LECTURA, { images: imagenes, modelTier: "default", effort: "low", signal }),
+      clasificar: (textos, signal) => sample.json(promptClasificar(textos), { modelTier: "default", effort: "low", signal }),
+    };
+  }
+
+  const aBase64 = (blob) => new Promise((ok, mal) => {
+    const fr = new FileReader();
+    fr.onload = () => ok(String(fr.result).split(",")[1]);
+    fr.onerror = () => mal(fr.error);
+    fr.readAsDataURL(blob);
+  });
+
+  function lectorServidor(url) {
+    const llamar = async (ruta, cuerpo, signal) => {
+      const r = await fetch(url.replace(/\/$/, "") + ruta, {
+        method: "POST", signal,
+        headers: { "Content-Type": "application/json", "X-NutriLog-Version": "1" },
+        body: JSON.stringify(cuerpo),
+      });
+      const datos = await r.json().catch(() => null);
+      if (!r.ok) throw { code: (datos && datos.error) || "upstream_error", message: "HTTP " + r.status };
+      return datos;
+    };
+    return {
+      tipo: "servidor", max: 3,
+      leer: async (imagenes, signal) => llamar("/leer", {
+        imagenes: await Promise.all(imagenes.map(async (b) => ({ media_type: "image/jpeg", data: await aBase64(b) }))),
+      }, signal),
+      clasificar: (textos, signal) => llamar("/clasificar", { textos }, signal),
+    };
+  }
+
   function obtenerLectorClaude() {
     if (claudeNoDisponible) return Promise.resolve(null); // motivoSinClaude ya quedó guardado
+    if (CONFIG.api) {
+      if (!consentimientoDado()) { motivoSinClaude = "no aceptaste enviar fotos para leerlas con IA"; return Promise.resolve(null); }
+      if (navigator.onLine === false) { motivoSinClaude = "no hay conexión a internet"; return Promise.resolve(null); }
+      return Promise.resolve(lectorServidor(CONFIG.api));
+    }
     if (!window.claude || typeof window.claude.use !== "function") {
-      motivoSinClaude = "esta versión de la app no está abierta dentro de Claude";
+      motivoSinClaude = "esta versión de la app no tiene acceso a Claude";
       return Promise.resolve(null);
     }
+    // El resultado (y el motivo si no se puede) se calcula una vez y se reutiliza
     lectorClaude ??= window.claude.use("sample")
       .then(async (sample) => {
-        if (!sample) { motivoSinClaude = "Claude no está disponible en esta app (sample no disponible)"; return null; }
+        if (!sample) { motivoArtifact = "Claude no está disponible en esta app"; return null; }
         const lim = await sample.limits().catch(() => null);
-        if (!lim || !lim.images) { motivoSinClaude = "esta app de Claude no permite enviar fotos (probá desde claude.ai en el navegador)"; return null; }
-        return { sample, max: lim.images.maxCount || 1 };
+        if (!lim || !lim.images) { motivoArtifact = "esta app de Claude no permite enviar fotos (probá desde claude.ai en el navegador)"; return null; }
+        return lectorArtifact(sample, lim.images.maxCount || 1);
       })
-      .catch((e) => { motivoSinClaude = "error al conectar con Claude (" + (e && (e.code || e.message)) + ")"; return null; });
-    return lectorClaude;
+      .catch((e) => { motivoArtifact = "error al conectar con Claude (" + (e && (e.code || e.message)) + ")"; return null; });
+    return lectorClaude.then((l) => { if (!l) motivoSinClaude = motivoArtifact; return l; });
+  }
+  let motivoArtifact = "";
+
+  // Consentimiento para enviar fotos a un servicio de IA (lo pide Apple, guía 5.1.2)
+  const CLAVE_CONSENTIMIENTO = "nutrilog-consentimiento-ia";
+  function consentimientoDado() {
+    try { return localStorage.getItem(CLAVE_CONSENTIMIENTO) === "si"; } catch { return false; }
+  }
+  function pedirConsentimiento() {
+    if (!CONFIG.api || consentimientoDado()) return Promise.resolve(true);
+    const dlg = $("#dialogo-consentimiento");
+    if (!dlg || typeof dlg.showModal !== "function") return Promise.resolve(true);
+    return new Promise((ok) => {
+      dlg.addEventListener("close", () => {
+        const si = dlg.returnValue === "si";
+        if (si) { try { localStorage.setItem(CLAVE_CONSENTIMIENTO, "si"); } catch { /* sin almacenamiento */ } }
+        ok(si);
+      }, { once: true });
+      dlg.showModal();
+    });
   }
 
   // ── Ingredientes aprendidos: los que no estaban en la base y clasificó Claude ──
-  const CLAVE_APRENDIDOS = "app-salud-aprendidos";
+  const CLAVE_APRENDIDOS = "nutrilog-aprendidos";
+  try { // migración desde el nombre anterior de la app
+    for (const [viejo, nuevo] of [["app-salud-aprendidos", "nutrilog-aprendidos"], ["app-salud-historial", "nutrilog-historial"]]) {
+      if (localStorage.getItem(viejo) && !localStorage.getItem(nuevo)) localStorage.setItem(nuevo, localStorage.getItem(viejo));
+    }
+  } catch { /* sin almacenamiento */ }
   function cargarAprendidos() {
     try {
       const d = JSON.parse(localStorage.getItem(CLAVE_APRENDIDOS) || "{}");
@@ -135,24 +209,14 @@
   }
   cargarAprendidos();
 
-  const ALERGENOS_VALIDOS = ["gluten", "leche", "huevo", "soja", "maní", "frutos de cáscara", "pescado", "crustáceos y moluscos", "sésamo", "mostaza", "apio", "sulfitos", "altramuces"];
   const slug = (t) => Analizador.normalizar(t).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
 
   /** Pide a Claude que clasifique los ingredientes que no están en la base de datos. */
   async function clasificarDesconocidos(lector, desconocidos) {
     const lista = desconocidos.filter((d) => !/^E\d/.test(d)).slice(0, 25);
     if (!lista.length) return false;
-    const prompt = `Sos nutricionista. Estos textos salieron de la lista de ingredientes de un alimento (etiqueta de Argentina u otro país hispanohablante) y no están en nuestra base de datos. Para cada uno, decí qué es y cómo afecta a la salud según la evidencia (OMS, EFSA, IARC).
-
-Niveles: "bueno" = alimento poco procesado con beneficios (verduras, legumbres, integrales, frutos secos…); "neutral" = seguro en cantidades habituales; "moderar" = azúcares añadidos, sal, grasas saturadas, carne roja, aditivos con dudas o que afectan a grupos sensibles; "evitar" = evidencia clara de riesgo (grasas trans, carne procesada con nitritos, aditivos prohibidos en otros países…). Si el texto NO es un ingrediente (una marca, una frase de la etiqueta, una cantidad), usá "ignorar".
-
-Respondé solo con un JSON array, un objeto por texto y en el mismo orden:
-[{"original": "texto exacto que te pasé", "nombre": "nombre corto", "categoria": "p. ej. Lácteo, Carne, Aditivo", "nivel": "bueno|neutral|moderar|evitar|ignorar", "que": "qué es, en una oración", "salud": "efecto en la salud, en una o dos oraciones", "alergeno": "uno de: ${ALERGENOS_VALIDOS.join(", ")}; o vacío"}]
-
-Textos:
-${lista.map((t) => "- " + t).join("\n")}`;
     ctlClaude = new AbortController();
-    const res = await lector.sample.json(prompt, { modelTier: "default", effort: "low", signal: ctlClaude.signal });
+    const res = await lector.clasificar(lista, ctlClaude.signal);
     if (!Array.isArray(res)) return false;
     const nuevos = [], ignorados = [];
     for (const x of res) {
@@ -187,13 +251,6 @@ ${lista.map((t) => "- " + t).join("\n")}`;
     return new Promise((r) => c.toBlob(r, "image/jpeg", 0.9));
   }
 
-  const INSTRUCCIONES_LECTURA = `Te paso la foto de la etiqueta de un producto alimenticio (puede ser de Argentina u otro país de habla hispana). Si hay más de una imagen, la primera es la foto completa y las otras son recortes ampliados de la misma foto (mitad de arriba y mitad de abajo) para leer mejor la letra chica.
-
-Transcribí EXACTAMENTE la lista de ingredientes tal como está escrita: desde la palabra "Ingredientes" hasta el final de la lista, con sus paréntesis, porcentajes y códigos (INS o E), y las frases de alérgenos ("Contiene…", "Puede contener…"). No incluyas la información nutricional, los datos del fabricante, promociones, fechas ni el modo de conservación. Si una palabra se ve borrosa, escribí la más probable para una etiqueta de alimentos, pero no inventes ingredientes que no se vean.
-
-Respondé solo con este JSON:
-{"hayIngredientes": true, "producto": "nombre del producto si se ve, si no vacío", "ingredientes": "Ingredientes: …", "legibilidad": "buena" | "parcial" | "mala"}`;
-
   let ctlClaude = null;
   async function leerConClaude(lector) {
     const imagenes = [await recorteABlob(sel.x, sel.y, sel.w, sel.h)];
@@ -202,9 +259,7 @@ Respondé solo con este JSON:
       imagenes.push(await recorteABlob(sel.x, sel.y + sel.h * 0.45, sel.w, sel.h * 0.55));
     }
     ctlClaude = new AbortController();
-    return lector.sample.json(INSTRUCCIONES_LECTURA, {
-      images: imagenes, modelTier: "default", effort: "low", signal: ctlClaude.signal,
-    });
+    return lector.leer(imagenes, ctlClaude.signal);
   }
 
   async function leerImagen() {
@@ -216,6 +271,7 @@ Respondé solo con este JSON:
     await new Promise((r) => setTimeout(r, 50)); // deja pintar la pantalla
 
     // 1º intento: Claude
+    motivoSinClaude = "";
     const lector = await obtenerLectorClaude();
     if (lector && !cancelado) {
       barra.parentElement.classList.add("indeterminada");
@@ -517,7 +573,7 @@ Respondé solo con este JSON:
   }
 
   // ── Historial (solo en este navegador) ─────────────────────────────────
-  const CLAVE_HISTORIAL = "app-salud-historial";
+  const CLAVE_HISTORIAL = "nutrilog-historial";
   function leerHistorial() {
     try { return JSON.parse(localStorage.getItem(CLAVE_HISTORIAL) || "[]").filter((h) => h && h.texto); } catch { return []; }
   }
@@ -620,6 +676,8 @@ Respondé solo con este JSON:
   });
   $("#btn-volver-resultado").addEventListener("click", () => mostrar("resultado"));
   $("#btn-inicio").addEventListener("click", () => { cancelado = true; ctlClaude?.abort(); mostrar("inicio"); });
+  $("#btn-acerca").addEventListener("click", () => mostrar("acerca"));
+  $("#btn-acerca-volver").addEventListener("click", () => mostrar("inicio"));
   $("#btn-borrar-historial").addEventListener("click", () => { guardarHistorial([]); pintarHistorial(); });
   pintarHistorial();
   $("#btn-cancelar").addEventListener("click", () => { cancelado = true; ctlClaude?.abort(); mostrar("inicio"); });

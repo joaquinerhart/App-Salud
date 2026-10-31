@@ -1,0 +1,42 @@
+# Compilación de NutriLog en la nube con Codemagic (para quien no tiene Mac).
+# Arma la app de iPhone, la firma y la sube a App Store Connect (TestFlight).
+# Pasos para configurarlo: ver PUBLICAR-EN-APP-STORE.md, «Opción B».
+workflows:
+  ios-app-store:
+    name: NutriLog iOS → App Store
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: NutriLog App Store Connect   # nombre de la clave de API que cargues en Codemagic
+    environment:
+      node: 22
+      xcode: latest
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.nutrilog.app
+    scripts:
+      - name: Instalar dependencias
+        script: npm ci
+      - name: Pruebas
+        script: npm test
+      - name: Armar la app web y copiarla al proyecto de iOS
+        script: |
+          npm run build
+          npx cap sync ios
+      - name: Usar los perfiles de firma
+        script: xcode-project use-profiles
+      - name: Número de compilación
+        script: |
+          cd ios/App
+          agvtool new-version -all $(($BUILD_NUMBER + 1))
+      - name: Compilar el .ipa
+        script: |
+          xcode-project build-ipa \
+            --project "ios/App/App.xcodeproj" \
+            --scheme "App"
+    artifacts:
+      - build/ios/ipa/*.ipa
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true

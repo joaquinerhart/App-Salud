@@ -25,8 +25,8 @@
   --aviso-texto: #6b4300;
   --enlace: #17804f;
   --sombra: 0 1px 2px rgba(21, 32, 26, .05), 0 8px 24px rgba(21, 32, 26, .07);
-  --f-titulo: "Bricolage Grotesque", "Figtree", system-ui, sans-serif;
-  --f-texto: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --f-titulo: "Bricolage Grotesque Variable", "Bricolage Grotesque", "Figtree Variable", "Figtree", system-ui, sans-serif;
+  --f-texto: "Figtree Variable", "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -74,7 +74,10 @@ button, input, textarea { font: inherit; color: inherit; }
 /* Cabecera */
 .cabecera { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: color-mix(in srgb, var(--fondo) 88%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid var(--linea); }
 body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--fondo); }
-.cabecera-fila { display: flex; align-items: center; min-height: 56px; }
+.cabecera-fila { display: flex; align-items: center; justify-content: space-between; min-height: 56px; }
+.boton-info { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 12px; border: 0; background: none; color: var(--suave); cursor: pointer; }
+.boton-info svg { width: 24px; height: 24px; }
+.boton-info:hover { color: var(--marca); background: var(--marca-suave); }
 .marca { display: inline-flex; align-items: center; gap: 10px; background: none; border: 0; padding: 4px 0; cursor: pointer; font-family: var(--f-titulo); font-weight: 800; font-size: 1.15rem; letter-spacing: -.01em; color: var(--tinta); }
 .marca-icono { width: 30px; height: 30px; color: var(--marca); }
 
@@ -296,6 +299,22 @@ textarea {
 
 /* Barra fija inferior en el resultado */
 .barra-accion { position: sticky; bottom: 0; padding: 12px 0 calc(12px + env(safe-area-inset-bottom, 0px)); background: linear-gradient(transparent, var(--fondo) 30%); }
+
+/* Acerca de */
+.texto-largo h2 { margin-top: 18px; }
+.texto-largo h2:first-child { margin-top: 0; }
+.texto-largo p, .texto-largo li { color: var(--tinta); font-size: .98rem; }
+.texto-largo ul { padding-left: 20px; margin: 6px 0; }
+.texto-largo li { margin-bottom: 6px; }
+.texto-largo a { color: var(--enlace); font-weight: 600; }
+.enlace-chico { font-size: .78rem; padding: 4px 2px; display: inline; }
+
+/* Diálogo de consentimiento */
+.dialogo { border: 0; border-radius: 24px; padding: 22px 20px; max-width: min(440px, calc(100vw - 32px)); background: var(--superficie); color: var(--tinta); box-shadow: 0 20px 60px rgba(0, 0, 0, .3); }
+.dialogo::backdrop { background: rgba(10, 20, 14, .55); backdrop-filter: blur(2px); }
+.dialogo h2 { font-size: 1.35rem; }
+.dialogo p { margin: 0 0 10px; }
+.dialogo-acciones { display: grid; gap: 10px; margin-top: 16px; }
 
 .aviso-legal { color: var(--suave); font-size: .78rem; text-align: center; margin: 20px 0 32px; text-wrap: balance; }
 

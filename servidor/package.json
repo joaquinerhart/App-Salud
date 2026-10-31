@@ -1,0 +1,20 @@
+{
+  "name": "nutrilog-servidor",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Servidor de NutriLog: lee etiquetas con Claude sin exponer la clave de API en la app",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.3.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "latest",
+    "typescript": "^5.6.0",
+    "wrangler": "^4.0.0"
+  }
+}
