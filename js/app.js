@@ -98,16 +98,82 @@
   // Claude lee fotos reales (borrosas, letra condensada, envases) mucho mejor que Tesseract.
   let lectorClaude = null; // promesa → { sample, max } o null
   let claudeNoDisponible = false;
+  let motivoSinClaude = ""; // por qué no se pudo usar Claude (se muestra en el resultado)
   function obtenerLectorClaude() {
-    if (claudeNoDisponible || !window.claude || typeof window.claude.use !== "function") return Promise.resolve(null);
+    if (claudeNoDisponible) return Promise.resolve(null); // motivoSinClaude ya quedó guardado
+    if (!window.claude || typeof window.claude.use !== "function") {
+      motivoSinClaude = "esta versión de la app no está abierta dentro de Claude";
+      return Promise.resolve(null);
+    }
     lectorClaude ??= window.claude.use("sample")
       .then(async (sample) => {
-        if (!sample) return null;
+        if (!sample) { motivoSinClaude = "Claude no está disponible en esta app (sample no disponible)"; return null; }
         const lim = await sample.limits().catch(() => null);
-        return lim && lim.images ? { sample, max: lim.images.maxCount || 1 } : null;
+        if (!lim || !lim.images) { motivoSinClaude = "esta app de Claude no permite enviar fotos (probá desde claude.ai en el navegador)"; return null; }
+        return { sample, max: lim.images.maxCount || 1 };
       })
-      .catch(() => null);
+      .catch((e) => { motivoSinClaude = "error al conectar con Claude (" + (e && (e.code || e.message)) + ")"; return null; });
     return lectorClaude;
+  }
+
+  // ── Ingredientes aprendidos: los que no estaban en la base y clasificó Claude ──
+  const CLAVE_APRENDIDOS = "app-salud-aprendidos";
+  function cargarAprendidos() {
+    try {
+      const d = JSON.parse(localStorage.getItem(CLAVE_APRENDIDOS) || "{}");
+      Analizador.agregarIngredientes(d.ingredientes || []);
+      Analizador.agregarIgnorados(d.ignorados || []);
+    } catch { /* sin almacenamiento */ }
+  }
+  function guardarAprendidos(ingredientes, ignorados) {
+    try {
+      const d = JSON.parse(localStorage.getItem(CLAVE_APRENDIDOS) || "{}");
+      d.ingredientes = [...(d.ingredientes || []), ...ingredientes].slice(-300);
+      d.ignorados = [...(d.ignorados || []), ...ignorados].slice(-300);
+      localStorage.setItem(CLAVE_APRENDIDOS, JSON.stringify(d));
+    } catch { /* sin almacenamiento */ }
+  }
+  cargarAprendidos();
+
+  const ALERGENOS_VALIDOS = ["gluten", "leche", "huevo", "soja", "maní", "frutos de cáscara", "pescado", "crustáceos y moluscos", "sésamo", "mostaza", "apio", "sulfitos", "altramuces"];
+  const slug = (t) => Analizador.normalizar(t).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
+
+  /** Pide a Claude que clasifique los ingredientes que no están en la base de datos. */
+  async function clasificarDesconocidos(lector, desconocidos) {
+    const lista = desconocidos.filter((d) => !/^E\d/.test(d)).slice(0, 25);
+    if (!lista.length) return false;
+    const prompt = `Sos nutricionista. Estos textos salieron de la lista de ingredientes de un alimento (etiqueta de Argentina u otro país hispanohablante) y no están en nuestra base de datos. Para cada uno, decí qué es y cómo afecta a la salud según la evidencia (OMS, EFSA, IARC).
+
+Niveles: "bueno" = alimento poco procesado con beneficios (verduras, legumbres, integrales, frutos secos…); "neutral" = seguro en cantidades habituales; "moderar" = azúcares añadidos, sal, grasas saturadas, carne roja, aditivos con dudas o que afectan a grupos sensibles; "evitar" = evidencia clara de riesgo (grasas trans, carne procesada con nitritos, aditivos prohibidos en otros países…). Si el texto NO es un ingrediente (una marca, una frase de la etiqueta, una cantidad), usá "ignorar".
+
+Respondé solo con un JSON array, un objeto por texto y en el mismo orden:
+[{"original": "texto exacto que te pasé", "nombre": "nombre corto", "categoria": "p. ej. Lácteo, Carne, Aditivo", "nivel": "bueno|neutral|moderar|evitar|ignorar", "que": "qué es, en una oración", "salud": "efecto en la salud, en una o dos oraciones", "alergeno": "uno de: ${ALERGENOS_VALIDOS.join(", ")}; o vacío"}]
+
+Textos:
+${lista.map((t) => "- " + t).join("\n")}`;
+    ctlClaude = new AbortController();
+    const res = await lector.sample.json(prompt, { modelTier: "default", effort: "low", signal: ctlClaude.signal });
+    if (!Array.isArray(res)) return false;
+    const nuevos = [], ignorados = [];
+    for (const x of res) {
+      if (!x || typeof x.original !== "string" || !x.original.trim()) continue;
+      if (x.nivel === "ignorar") { ignorados.push(x.original); continue; }
+      if (!["bueno", "neutral", "moderar", "evitar"].includes(x.nivel)) continue;
+      nuevos.push({
+        id: "aprendido-" + slug(x.original),
+        nombre: String(x.nombre || x.original).slice(0, 80),
+        alias: [x.original],
+        categoria: String(x.categoria || "Otro").slice(0, 40),
+        nivel: x.nivel,
+        que: String(x.que || "").slice(0, 300),
+        salud: String(x.salud || "").slice(0, 400),
+        ...(ALERGENOS_VALIDOS.includes(x.alergeno) ? { alergeno: x.alergeno } : {}),
+      });
+    }
+    Analizador.agregarIngredientes(nuevos);
+    Analizador.agregarIgnorados(ignorados);
+    guardarAprendidos(nuevos, ignorados);
+    return nuevos.length + ignorados.length > 0;
   }
   obtenerLectorClaude(); // lo vamos preparando mientras el usuario saca la foto
 
@@ -165,13 +231,36 @@ Respondé solo con este JSON:
         }
         producto = typeof r.producto === "string" ? r.producto.trim() : "";
         legibilidad = r.legibilidad;
+        leidoPorClaude = true;
+        motivoSinClaude = "";
         texto.value = /ingredient/i.test(ing.slice(0, 20)) ? ing : "Ingredientes: " + ing;
+
+        // Ingredientes que no conocemos: se los preguntamos a Claude (y los recordamos)
+        const previo = Analizador.analizar(texto.value, { leidoPorClaude: true });
+        if (previo.desconocidos.length && !cancelado) {
+          txtProgreso.textContent = "Analizando ingredientes poco comunes…";
+          barra.parentElement.classList.add("indeterminada");
+          try { await clasificarDesconocidos(lector, previo.desconocidos); }
+          catch (e2) { if (e2 && e2.code === "cancelled") return; console.warn("No se pudieron clasificar:", e2 && e2.code); }
+          barra.parentElement.classList.remove("indeterminada");
+          if (cancelado) return;
+        }
         analizarYMostrar();
         return;
       } catch (e) {
         barra.parentElement.classList.remove("indeterminada");
         if (cancelado || (e && e.code === "cancelled")) return;
         console.warn("Lectura con Claude no disponible:", e && e.code, e && e.message);
+        motivoSinClaude = {
+          not_granted: "no se dio permiso para usar Claude",
+          sampling_disabled: "Claude no está habilitado en esta cuenta",
+          images_unavailable: "esta app de Claude no permite enviar fotos (probá desde claude.ai en el navegador)",
+          rate_limited: "se alcanzó el límite de uso de Claude por ahora",
+          image_rejected: "Claude no pudo abrir esa foto",
+          invalid_json: "Claude respondió en un formato inesperado",
+          refused: "Claude no quiso procesar esa foto",
+          session_expired: "la sesión de Claude expiró: volvé a iniciar sesión",
+        }[e && e.code] || "error de Claude (" + ((e && (e.code || e.message)) || "desconocido") + ")";
         if (e && ["not_granted", "sampling_disabled", "images_unavailable", "not_declared", "capability_disabled", "capability_removed"].includes(e.code)) {
           claudeNoDisponible = true;
         }
@@ -202,9 +291,11 @@ Respondé solo con este JSON:
 
       producto = "";
       legibilidad = "";
+      leidoPorClaude = false;
       texto.value = mejor.texto;
       if (!mejor.texto || !mejor.ingredientes) {
-        alertaInicio("No pudimos leer los ingredientes. Acercate más a la lista, con buena luz, sin reflejos y con la foto bien enfocada.");
+        alertaInicio("No pudimos leer los ingredientes. Acercate más a la lista, con buena luz, sin reflejos y con la foto bien enfocada."
+          + (motivoSinClaude ? " (Se usó el lector del teléfono, menos preciso, porque " + motivoSinClaude + ".)" : ""));
         return;
       }
       analizarYMostrar();
@@ -215,6 +306,7 @@ Respondé solo con este JSON:
   }
   let producto = "";
   let legibilidad = "";
+  let leidoPorClaude = false; // el texto lo transcribió Claude (o lo escribió una persona): sin correcciones de OCR
 
   function abrirRecorte() {
     if (!imagenOriginal) return;
@@ -333,6 +425,7 @@ Respondé solo con este JSON:
         el("p", "veredicto-frase", "La foto no se leyó con claridad y preferimos no darte una nota que podría estar equivocada."),
         el("p", "veredicto-nota-lectura", "Sacá otra foto más de cerca, enfocada y con buena luz, o corregí el texto en «¿Se leyó mal la etiqueta?»."),
       );
+      agregarNotaLector(v);
       return;
     }
     v.className = "veredicto nivel-" + resumen.nivel;
@@ -348,11 +441,18 @@ Respondé solo con este JSON:
     if (legibilidad === "parcial" || legibilidad === "mala") {
       v.append(el("p", "veredicto-nota-lectura", "Parte de la etiqueta se veía borrosa: revisá la lista de ingredientes por las dudas."));
     }
+    agregarNotaLector(v);
     // Animación del anillo hasta la nota
     const arco = anillo.querySelector(".arco");
     requestAnimationFrame(() => requestAnimationFrame(() => {
       arco.style.strokeDashoffset = String(326.7 * (1 - Math.max(0.02, resumen.nota / 10)));
     }));
+  }
+
+  /** Indica qué lector se usó y, si no se pudo usar Claude, por qué. */
+  function agregarNotaLector(v) {
+    if (!motivoSinClaude) return;
+    v.append(el("p", "nota-lector", "Se usó el lector del teléfono, que es menos preciso, porque " + motivoSinClaude + "."));
   }
 
   function pintarContadores(r) {
@@ -428,7 +528,7 @@ Respondé solo con este JSON:
     if (!r.fiable || esEjemplo) return;
     const titulo = producto || r.ingredientes.slice(0, 3).map((i) => i.nombre.split(" (")[0]).join(", ");
     const items = leerHistorial().filter((h) => h.texto !== texto.value);
-    items.unshift({ titulo, producto, texto: texto.value, nota: r.resumen.nota, nivel: r.resumen.nivel, veredicto: r.resumen.veredicto, fecha: Date.now() });
+    items.unshift({ titulo, producto, claude: leidoPorClaude, texto: texto.value, nota: r.resumen.nota, nivel: r.resumen.nivel, veredicto: r.resumen.veredicto, fecha: Date.now() });
     guardarHistorial(items);
   }
   function pintarHistorial() {
@@ -448,6 +548,8 @@ Respondé solo con este JSON:
       b.append(mini, txt);
       b.addEventListener("click", () => {
         texto.value = h.texto;
+        leidoPorClaude = !!h.claude;
+        motivoSinClaude = "";
         producto = h.producto || "";
         legibilidad = "";
         imagenOriginal = null;
@@ -463,7 +565,7 @@ Respondé solo con este JSON:
   function analizarYMostrar({ guardar = true } = {}) {
     const valor = texto.value.trim();
     if (!valor) return;
-    const r = Analizador.analizar(valor);
+    const r = Analizador.analizar(valor, { leidoPorClaude });
     if (!r.ingredientes.length) {
       alertaInicio("No reconocimos ningún ingrediente. Revisá el texto o probá con otra foto.");
       return;
@@ -494,7 +596,7 @@ Respondé solo con este JSON:
   $("#btn-analizar-manual").addEventListener("click", () => {
     texto.value = $("#texto-manual").value;
     imagenOriginal = null;
-    producto = ""; legibilidad = "";
+    producto = ""; legibilidad = ""; leidoPorClaude = true; motivoSinClaude = "";
     $("#btn-recortar").hidden = true;
     analizarYMostrar();
   });
@@ -502,11 +604,12 @@ Respondé solo con este JSON:
     texto.value = EJEMPLO;
     esEjemplo = true;
     imagenOriginal = null;
-    producto = ""; legibilidad = "";
+    producto = ""; legibilidad = ""; leidoPorClaude = true; motivoSinClaude = "";
     $("#btn-recortar").hidden = true;
     analizarYMostrar();
   });
-  $("#btn-analizar").addEventListener("click", () => { legibilidad = ""; analizarYMostrar(); });
+  // Si la persona corrigió el texto a mano, lo tomamos tal cual (sin correcciones de OCR)
+  $("#btn-analizar").addEventListener("click", () => { legibilidad = ""; leidoPorClaude = true; analizarYMostrar(); });
   $("#btn-recortar").addEventListener("click", abrirRecorte);
   $("#btn-leer").addEventListener("click", leerImagen);
   $("#btn-girar").addEventListener("click", () => {

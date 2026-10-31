@@ -130,3 +130,20 @@ test("no da nota si la lectura es basura", () => {
   const r = analizar("INGREDIENTES: relleno (apar, testurzado de me aman de go, hanna de 000 enriquecida, leche en e e dm ll Iromatizantes, aborn mala aber gone pon a NA Bncdor 1ONTa de Igo que La a Ub es TT mea mt REN Y 0 M9 como MOCINE y mas viomna 37 Soy Sal Pulede ca más");
   assert.strictEqual(r.fiable, false);
 });
+
+test("con texto de Claude no descarta ingredientes que no están en la base", () => {
+  const t = "Ingredientes: carne vacuna, queso muzzarella (leche, fermentos lácticos, cuajo), sal, pimienta.";
+  const ocr = analizar(t);
+  const claude = analizar(t, { leidoPorClaude: true });
+  assert.ok(claude.fiable);
+  assert.ok(claude.desconocidos.some((d) => d.includes("fermentos")));
+});
+
+test("aprende ingredientes nuevos e ignora textos", () => {
+  const { agregarIngredientes, agregarIgnorados } = require("../js/analizador.js");
+  agregarIngredientes([{ id: "aprendido-cuajo", nombre: "Cuajo", alias: ["cuajo"], categoria: "Enzima", nivel: "neutral", que: "Enzima.", salud: "Seguro." }]);
+  agregarIgnorados(["granja del sol"]);
+  const r = analizar("Ingredientes: leche, cuajo, granja del sol", { leidoPorClaude: true });
+  assert.ok(ids(r).includes("aprendido-cuajo"));
+  assert.ok(!r.desconocidos.length);
+});

@@ -240,6 +240,7 @@ textarea {
 }
 .veredicto-frase { margin: 6px 0 0; max-width: 32ch; font-size: 1.02rem; }
 .veredicto-nota-lectura { margin: 6px 0 0; font-size: .86rem; color: var(--suave); max-width: 36ch; }
+.nota-lector { margin: 10px 0 0; padding: 8px 12px; border-radius: 10px; background: var(--neutral-suave); color: var(--suave); font-size: .82rem; max-width: 40ch; }
 .icono-grande { width: 84px; height: 84px; border-radius: 50%; display: grid; place-items: center; background: var(--cs); color: var(--c); margin: 8px 0; }
 .icono-grande svg { width: 42px; height: 42px; }
 

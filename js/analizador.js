@@ -46,7 +46,7 @@
     for (const a of ing.alias) { const n = normalizar(a); if (!n.includes(" ") && n.length >= 4) palabraAlergeno.set(n, ing.alergeno); }
   }
   const palabrasFuncion = new Set(db.PALABRAS_FUNCION.map(normalizar));
-  const funcionesOrdenadas = [...palabrasFuncion].sort((a, b) => b.length - a.length);
+  let funcionesOrdenadas = [...palabrasFuncion].sort((a, b) => b.length - a.length);
 
   // Vocabulario de palabras conocidas para corregir errores de lectura (OCR)
   const vocabulario = new Set();
@@ -61,6 +61,45 @@
     vocabPorLongitud.get(w.length).push(w);
   }
   const cacheCorreccion = new Map();
+
+  function agregarAlVocabulario(texto) {
+    for (const w of texto.split(" ")) {
+      if (w.length < 3 || vocabulario.has(w)) continue;
+      vocabulario.add(w);
+      if (!vocabPorLongitud.has(w.length)) vocabPorLongitud.set(w.length, []);
+      vocabPorLongitud.get(w.length).push(w);
+    }
+    cacheCorreccion.clear();
+  }
+
+  /**
+   * Añade ingredientes nuevos (p. ej. clasificados por Claude) a la base de datos en memoria.
+   * Cada uno: {id, nombre, alias[], categoria, nivel, que, salud, alergeno?}
+   */
+  function agregarIngredientes(lista) {
+    for (const ing of lista) {
+      if (!ing || !ing.id || !Array.isArray(ing.alias) || !NIVELES[ing.nivel]) continue;
+      if (db.INGREDIENTES.some((x) => x.id === ing.id)) continue;
+      db.INGREDIENTES.push(ing);
+      for (const a of ing.alias) {
+        const n = normalizar(a);
+        if (!n) continue;
+        indiceAlias.push({ alias: n, ing });
+        agregarAlVocabulario(n);
+        if (ing.alergeno && !n.includes(" ") && n.length >= 4) palabraAlergeno.set(n, ing.alergeno);
+      }
+    }
+    indiceAlias.sort((x, y) => y.alias.length - x.alias.length);
+  }
+
+  /** Textos que no son ingredientes (marcas, frases de la etiqueta) y se deben ignorar. */
+  function agregarIgnorados(textos) {
+    for (const t of textos) {
+      const n = normalizar(t);
+      if (n) { palabrasFuncion.add(n); agregarAlVocabulario(n); }
+    }
+    funcionesOrdenadas = [...palabrasFuncion].sort((a, b) => b.length - a.length);
+  }
 
   /** Devuelve la palabra conocida más parecida, o null si no hay una clara. */
   function corregirPalabra(w) {
@@ -290,7 +329,10 @@
    * Analiza el texto de una etiqueta.
    * @returns {{ingredientes: Array, desconocidos: string[], trazas: Array, alergenos: string[], resumen: object}}
    */
-  function analizar(texto) {
+  function analizar(texto, opciones = {}) {
+    // Si el texto lo transcribió Claude (o una persona) no hay errores de OCR que corregir:
+    // así no "corregimos" ingredientes reales que no están en la base de datos.
+    const exacto = !!opciones.leidoPorClaude;
     const { lista, trazas } = extraerIngredientes(texto);
     const porId = new Map();
     const resultados = [];
@@ -319,7 +361,7 @@
       const s = normalizar(original);
       if (!s || palabrasFuncion.has(s) || /^sin /.test(s) || /^(segun )?ley\b/.test(s)) continue; // "sin gluten", "sin azúcares añadidos"
 
-      const { texto: sCorregido, corregidas } = corregirFragmento(s);
+      const { texto: sCorregido, corregidas } = exacto ? { texto: s, corregidas: new Set() } : corregirFragmento(s);
       if (palabrasFuncion.has(sCorregido)) continue;
       const encontrados = buscarEnFragmento(sCorregido);
       if (encontrados.length) {
@@ -334,7 +376,7 @@
       const limpio = quitarFuncionInicial(sCorregido).replace(/[^a-z0-9ñ ]/g, "").trim();
       if (limpio.length < 3 || palabrasFuncion.has(limpio) || /^\d+$/.test(limpio)) continue;
 
-      const aprox = buscarAproximado(limpio);
+      const aprox = exacto ? null : buscarAproximado(limpio);
       if (aprox) {
         anotar(aprox.ing, original.trim(), { aproximado: true });
         continue;
@@ -367,7 +409,7 @@
     const palabrasLista = normalizar(lista).split(/[^a-z0-9ñ]+/).filter((w) => w.length >= 3 && !/\d/.test(w));
     const conocidas = palabrasLista.filter((w) => vocabulario.has(w) || corregirPalabra(w)).length;
     const proporcionConocidas = palabrasLista.length ? conocidas / palabrasLista.length : 0;
-    const fiable = proporcionConocidas >= 0.7 && resultados.length >= 3 && desconocidos.length <= Math.max(2, resultados.length * 0.6)
+    const fiable = exacto ? resultados.length >= 1 : proporcionConocidas >= 0.7 && resultados.length >= 3 && desconocidos.length <= Math.max(2, resultados.length * 0.6)
       && letrasDesconocidas <= letrasReconocidas * 1.5;
 
     return {
@@ -470,7 +512,7 @@
     return { puntos, nota, veredicto, nivel, frase, motivos, conteo, ultraprocesado, avisos };
   }
 
-  const api = { analizar, normalizar, extraerIngredientes, trocear, levenshtein, corregirOCR, NIVELES };
+  const api = { analizar, normalizar, extraerIngredientes, trocear, levenshtein, corregirOCR, agregarIngredientes, agregarIgnorados, NIVELES };
   if (typeof window === "undefined" && typeof module !== "undefined") module.exports = api;
   else root.Analizador = api;
 })(typeof globalThis !== "undefined" ? globalThis : this);
