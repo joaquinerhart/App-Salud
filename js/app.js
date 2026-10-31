@@ -316,6 +316,9 @@
           invalid_json: "Claude respondió en un formato inesperado",
           refused: "Claude no quiso procesar esa foto",
           session_expired: "la sesión de Claude expiró: volvé a iniciar sesión",
+          server_not_configured: "el servidor de NutriLog no tiene configurada la clave de Claude",
+          upstream_error: "el servicio de lectura no respondió; probá de nuevo en un rato",
+          truncated: "la respuesta de Claude llegó incompleta",
         }[e && e.code] || "error de Claude (" + ((e && (e.code || e.message)) || "desconocido") + ")";
         if (e && ["not_granted", "sampling_disabled", "images_unavailable", "not_declared", "capability_disabled", "capability_removed"].includes(e.code)) {
           claudeNoDisponible = true;

@@ -3,6 +3,11 @@ main = "src/index.ts"
 compatibility_date = "2025-09-01"
 compatibility_flags = ["nodejs_compat"]
 
+# La app web (carpeta ../www) se publica en la misma dirección que el servidor.
+# Así hay un solo link para la beta: https://nutrilog-servidor.TU-USUARIO.workers.dev
+[assets]
+directory = "../www"
+
 # Límite de uso: como máximo 15 lecturas por minuto por cada IP.
 # Protege tu saldo de la API si alguien intenta abusar del servidor.
 [[ratelimits]]

@@ -16,7 +16,7 @@ fs.rmSync(www, { recursive: true, force: true });
 fs.mkdirSync(www, { recursive: true });
 
 // 1) Código y estilos de la app
-for (const f of ["css", "js", "icon.svg", "manifest.webmanifest"]) copiar(path.join(raiz, f), path.join(www, f));
+for (const f of ["css", "js", "icon.svg", "manifest.webmanifest", "privacidad.html", "soporte.html"]) copiar(path.join(raiz, f), path.join(www, f));
 
 // 2) Fuentes (sin Google Fonts: funcionan sin internet y no se avisa a terceros)
 for (const paquete of ["bricolage-grotesque", "figtree"]) {
@@ -39,6 +39,8 @@ copiar(path.join(nm, "@tesseract.js-data/spa", datosSpa, "spa.traineddata.gz"), 
 let config = {};
 try { config = JSON.parse(fs.readFileSync(path.join(raiz, "nutrilog.config.json"), "utf8")); } catch { /* sin archivo */ }
 if (process.env.NUTRILOG_API) config.api = process.env.NUTRILOG_API;
+const argApi = process.argv.find((a) => a.startsWith("--api="));
+if (argApi) config.api = argApi.slice(6); // "/" = mismo servidor que publica la app web
 if (!config.api) console.warn("⚠️  Falta la dirección del servidor (nutrilog.config.json → \"api\"). La app usará solo el lector del teléfono.");
 fs.writeFileSync(path.join(www, "config.js"),
   `window.NUTRILOG_CONFIG = ${JSON.stringify({ api: config.api || "" })};\n` +

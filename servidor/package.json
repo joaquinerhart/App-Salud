@@ -5,8 +5,9 @@
   "description": "Servidor de NutriLog: lee etiquetas con Claude sin exponer la clave de API en la app",
   "type": "module",
   "scripts": {
-    "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
+    "dev": "npm run web && wrangler dev",
+    "web": "cd .. && npm install --no-audit --no-fund && node herramientas/construir-www.mjs --api=/",
+    "deploy": "npm run web && wrangler deploy",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
