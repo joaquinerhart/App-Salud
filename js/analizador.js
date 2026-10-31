@@ -372,36 +372,76 @@
     "sacarina", "ciclamato", "carne-separada", "fosfatos", "pgpr", "bha-bht", "edta", "gomas-vegetales",
   ]);
 
+  const minus = (t) => t.charAt(0).toLowerCase() + t.slice(1);
+
+  /**
+   * Calcula la puntuación (0-100 y nota sobre 10), la recomendación y
+   * los motivos principales en lenguaje sencillo.
+   */
   function resumir(resultados) {
     const conteo = { bueno: 0, neutral: 0, moderar: 0, evitar: 0 };
     let puntos = 100;
-    const azucares = [];
+    const azucares = resultados.filter((r) => r.categoria === "Azúcar añadido");
+    const aditivos = resultados.filter((r) => r.e && r.e.length && !["bueno"].includes(r.nivel));
     for (const r of resultados) {
       conteo[r.nivel]++;
       const principal = r.posicion < 3; // los primeros ingredientes son los más abundantes
-      if (r.nivel === "evitar") puntos -= principal ? 25 : 18;
-      else if (r.nivel === "moderar") puntos -= principal ? 12 : 6;
+      if (r.nivel === "evitar") puntos -= principal ? 30 : 18;
+      else if (r.nivel === "moderar") puntos -= principal ? (r.categoria === "Azúcar añadido" ? 20 : 15) : 6;
       else if (r.nivel === "bueno") puntos += principal ? 6 : 3;
-      if (r.categoria === "Azúcar añadido") azucares.push(r.nombre);
     }
-    puntos = Math.max(0, Math.min(100, Math.round(puntos)));
-
     const marcadores = resultados.filter((r) => MARCADORES_ULTRAPROCESADO.has(r.id));
     const ultraprocesado = marcadores.length >= 2 || (marcadores.length >= 1 && resultados.length >= 8);
+    if (ultraprocesado) puntos -= 10;
+    if (azucares.length >= 2) puntos -= 5;
+    puntos = Math.max(0, Math.min(100, Math.round(puntos)));
+    // Un ultraprocesado o algo "a evitar" nunca puede salir como recomendado
+    if ((ultraprocesado || conteo.evitar > 0) && puntos >= 70) puntos = 65;
+    const nota = Math.round(puntos) / 10;
 
-    let veredicto, nivel;
-    if (!resultados.length) { veredicto = "Sin datos suficientes"; nivel = "neutral"; }
-    else if (puntos >= 75) { veredicto = "Buena opción"; nivel = "bueno"; }
-    else if (puntos >= 50) { veredicto = "Consumo moderado"; nivel = "moderar"; }
-    else { veredicto = "Consumo ocasional"; nivel = "evitar"; }
+    let veredicto, nivel, frase;
+    if (!resultados.length) {
+      veredicto = "Sin resultado"; nivel = "neutral";
+      frase = "No hemos reconocido ingredientes. Prueba con otra foto.";
+    } else if (puntos >= 70) {
+      veredicto = "Recomendado"; nivel = "bueno";
+      frase = "Sus ingredientes son, en general, saludables.";
+    } else if (puntos >= 40) {
+      veredicto = "Poco recomendado"; nivel = "moderar";
+      frase = "Se puede tomar de vez en cuando, mejor no a diario.";
+    } else {
+      veredicto = "No recomendado"; nivel = "evitar";
+      frase = "Mejor elegir otra opción o tomarlo muy de vez en cuando.";
+    }
+
+    // Motivos en lenguaje sencillo: primero lo malo, luego lo bueno
+    const malos = [];
+    for (const r of resultados.filter((x) => x.nivel === "evitar")) malos.push("Tiene " + minus(r.nombre.split(" (")[0]));
+    if (azucares.length >= 2) malos.push(`Tiene ${azucares.length} tipos de azúcar añadido`);
+    else if (azucares.length === 1 && azucares[0].posicion < 3) malos.push("Tiene mucho azúcar añadido");
+    if (ultraprocesado) malos.push("Es un producto ultraprocesado");
+    const sal = resultados.find((r) => r.id === "sal");
+    if (sal && sal.posicion < 3) malos.push("Tiene mucha sal");
+    const grasas = resultados.filter((r) => ["aceite-palma", "aceite-coco", "grasa-vegetal", "manteca-cerdo", "mantequilla"].includes(r.id) && r.posicion < 4);
+    const NOMBRE_GRASA = { "aceite-palma": "aceite de palma", "aceite-coco": "aceite de coco", "grasa-vegetal": "grasa vegetal", "manteca-cerdo": "grasa animal", mantequilla: "mantequilla" };
+    if (grasas.length) malos.push("Tiene grasas poco saludables (" + grasas.map((g) => NOMBRE_GRASA[g.id]).join(", ") + ")");
+    if (aditivos.length >= 4) malos.push(`Lleva muchos aditivos (${aditivos.length})`);
+    if (resultados.some((r) => r.categoria === "Edulcorante") && malos.length < 4) malos.push("Lleva edulcorantes");
+
+    const buenos = [];
+    const principalesBuenos = resultados.filter((r) => r.nivel === "bueno" && r.posicion < 3);
+    for (const r of principalesBuenos.slice(0, 2)) buenos.push("Tiene " + minus(r.nombre.split(" (")[0]));
+    if (resultados.length && !aditivos.length && conteo.evitar === 0 && conteo.moderar <= 1 && resultados.length <= 8) buenos.push("Ingredientes sencillos, sin aditivos");
+
+    const motivos = [
+      ...malos.slice(0, 4).map((texto) => ({ tipo: "malo", texto })),
+      ...buenos.slice(0, 2).map((texto) => ({ tipo: "bueno", texto })),
+    ];
 
     const avisos = [];
-    if (azucares.length >= 2) avisos.push(`Contiene ${azucares.length} tipos de azúcares añadidos (${azucares.join(", ")}). Es una forma habitual de que el azúcar no aparezca el primero en la lista.`);
-    else if (azucares.length === 1 && resultados.find((r) => r.categoria === "Azúcar añadido").posicion < 3) avisos.push("Un azúcar añadido está entre los tres ingredientes principales.");
-    if (ultraprocesado) avisos.push("Por sus ingredientes, probablemente es un alimento ultraprocesado (grupo NOVA 4). Su consumo frecuente se asocia con peor salud.");
     if (resultados.some((r) => r.id === "colorantes-southampton")) avisos.push("Contiene colorantes que pueden afectar a la actividad y la atención de los niños.");
 
-    return { puntos, veredicto, nivel, conteo, ultraprocesado, avisos };
+    return { puntos, nota, veredicto, nivel, frase, motivos, conteo, ultraprocesado, avisos };
   }
 
   const api = { analizar, normalizar, extraerIngredientes, trocear, levenshtein, corregirOCR, NIVELES };

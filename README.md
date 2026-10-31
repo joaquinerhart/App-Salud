@@ -1,6 +1,6 @@
 # App Salud · Lector de ingredientes
 
-Web app (funciona en el móvil) que **lee la lista de ingredientes de la etiqueta de un alimento** y te explica **qué es cada ingrediente y cómo afecta a tu salud**.
+Web app (funciona en el móvil): sacas una foto de los ingredientes de un alimento y te dice si es **Recomendado, Poco recomendado o No recomendado** para tu salud, con una **nota sobre 10** y los motivos. También explica qué es cada ingrediente.
 
 ## Cómo funciona
 

@@ -92,3 +92,16 @@ test("ignora palabras de función mal leídas y arregla E1500", () => {
   assert.deepStrictEqual(ids(r), ["carbonatos", "caramelo"]);
   assert.deepStrictEqual(r.desconocidos, []);
 });
+
+test("da una recomendación clara con nota sobre 10", () => {
+  const avena = analizar("copos de avena integral, almendras, pasas");
+  assert.strictEqual(avena.resumen.veredicto, "Recomendado");
+  assert.ok(avena.resumen.nota >= 7 && avena.resumen.nota <= 10);
+
+  const yogur = analizar("leche, azúcar, fresa, almidón modificado, aroma, carmín");
+  assert.strictEqual(yogur.resumen.veredicto, "Poco recomendado");
+
+  const galletas = analizar("harina de trigo, azúcar, aceite de palma, jarabe de glucosa-fructosa, sal, E471, aroma, E150d");
+  assert.strictEqual(galletas.resumen.veredicto, "No recomendado");
+  assert.ok(galletas.resumen.motivos.some((m) => m.texto.includes("ultraprocesado")));
+});

@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>App Salud · Lector de ingredientes</title>
-  <meta name="description" content="Fotografía la etiqueta de un alimento y descubre qué es cada ingrediente y cómo afecta a tu salud.">
+  <title>App Salud</title>
+  <meta name="description" content="Saca una foto de los ingredientes de un alimento y descubre si es recomendable para tu salud.">
   <meta name="theme-color" content="#1f7a4d">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
@@ -12,108 +12,96 @@
 </head>
 <body>
   <header class="cabecera">
-    <div class="contenedor">
-      <h1><span aria-hidden="true">🥗</span> App Salud</h1>
-      <p>Fotografía la lista de ingredientes de un alimento y descubre qué es cada uno y cómo afecta a tu salud.</p>
-    </div>
+    <div class="contenedor">App Salud</div>
   </header>
 
   <main class="contenedor">
-    <section class="tarjeta" aria-labelledby="titulo-entrada">
-      <h2 id="titulo-entrada">1. Lee la etiqueta</h2>
+    <!-- 1. Inicio -->
+    <section id="pantalla-inicio" class="pantalla">
+      <h1>¿Es sano este producto?</h1>
+      <p class="sub">Saca una foto de la lista de <strong>ingredientes</strong> y te decimos si es recomendable para tu salud.</p>
 
-      <div class="botones-captura">
-        <label class="boton boton-principal" for="input-camara">
-          <span aria-hidden="true">📷</span> Hacer foto
-        </label>
-        <input id="input-camara" type="file" accept="image/*" capture="environment" hidden>
+      <label class="boton-escanear" for="input-camara">
+        <span class="icono-camara" aria-hidden="true">📷</span>
+        Escanear ingredientes
+      </label>
+      <input id="input-camara" type="file" accept="image/*" capture="environment" hidden>
 
-        <label class="boton" for="input-archivo">
-          <span aria-hidden="true">🖼️</span> Subir imagen
-        </label>
+      <div class="enlaces">
+        <label for="input-archivo" class="enlace">Elegir foto de la galería</label>
         <input id="input-archivo" type="file" accept="image/*" hidden>
-
-        <button type="button" class="boton boton-texto" id="btn-ejemplo">Probar un ejemplo</button>
-      </div>
-      <p class="ayuda">Consejo: haz la foto de cerca, con buena luz, sin reflejos y con el texto lo más plano posible. La imagen se procesa en tu dispositivo, no se envía a ningún servidor.</p>
-
-      <div id="zona-recorte" class="zona-recorte" hidden>
-        <p class="paso-recorte"><strong>Marca sólo la lista de ingredientes:</strong> arrastra el dedo sobre la foto. Así se lee mucho mejor.</p>
-        <div class="marco-recorte"><canvas id="lienzo-recorte" aria-label="Foto de la etiqueta. Arrastra para seleccionar los ingredientes"></canvas></div>
-        <div class="acciones">
-          <button type="button" class="boton boton-principal" id="btn-leer">Leer ingredientes</button>
-          <button type="button" class="boton" id="btn-girar">↻ Girar foto</button>
-          <button type="button" class="boton boton-texto" id="btn-toda">Usar toda la foto</button>
-        </div>
+        <button type="button" class="enlace" id="btn-escribir">Escribir los ingredientes</button>
+        <button type="button" class="enlace" id="btn-ejemplo">Ver un ejemplo</button>
       </div>
 
-      <div id="zona-ocr" class="zona-ocr" hidden>
-        <img id="vista-previa" alt="Foto de la etiqueta">
-        <div class="progreso" role="status" aria-live="polite">
-          <div class="barra"><div id="barra-progreso"></div></div>
-          <span id="texto-progreso">Preparando…</span>
-        </div>
-      </div>
-
-      <label for="texto-ingredientes" class="etiqueta-campo">…o escribe / pega los ingredientes:</label>
-      <textarea id="texto-ingredientes" rows="6" placeholder="Ingredientes: harina de trigo, azúcar, aceite de palma, sal, emulgente (E-471)…"></textarea>
-      <p class="ayuda">Puedes corregir aquí cualquier error de lectura antes de analizar.</p>
-
-      <div class="acciones">
-        <button type="button" class="boton boton-principal" id="btn-analizar">Analizar ingredientes</button>
-        <button type="button" class="boton boton-texto" id="btn-limpiar">Limpiar</button>
+      <div id="zona-escribir" class="zona-escribir" hidden>
+        <label for="texto-manual" class="etiqueta-campo">Copia aquí los ingredientes:</label>
+        <textarea id="texto-manual" rows="5" placeholder="Ej.: harina de trigo, azúcar, aceite de palma, sal…"></textarea>
+        <button type="button" class="boton boton-principal" id="btn-analizar-manual">Ver resultado</button>
       </div>
     </section>
 
-    <section id="resultados" class="resultados" hidden aria-live="polite">
-      <div class="tarjeta resumen" id="resumen"></div>
+    <!-- 2. Leyendo -->
+    <section id="pantalla-leyendo" class="pantalla" hidden>
+      <img id="vista-previa" class="vista-previa" alt="Foto de la etiqueta">
+      <p id="texto-progreso" class="texto-progreso" role="status" aria-live="polite">Leyendo la etiqueta…</p>
+      <div class="barra"><div id="barra-progreso"></div></div>
+      <button type="button" class="enlace" id="btn-cancelar">Cancelar</button>
+    </section>
 
-      <div class="tarjeta">
-        <div class="cabecera-lista">
-          <h2>2. Ingredientes</h2>
-          <div class="filtros" role="group" aria-label="Filtrar por efecto">
-            <button type="button" class="chip activo" data-filtro="todos">Todos</button>
-            <button type="button" class="chip nivel-evitar" data-filtro="evitar">Evitar</button>
-            <button type="button" class="chip nivel-moderar" data-filtro="moderar">Moderar</button>
-            <button type="button" class="chip nivel-neutral" data-filtro="neutral">Neutral</button>
-            <button type="button" class="chip nivel-bueno" data-filtro="bueno">Beneficioso</button>
-          </div>
-        </div>
-        <p class="ayuda">Ordenados como en la etiqueta: los primeros son los que más cantidad hay.</p>
+    <!-- Recorte (opcional, sólo si se leyó mal) -->
+    <section id="pantalla-recorte" class="pantalla" hidden>
+      <h2>Marca sólo los ingredientes</h2>
+      <p class="sub">Arrastra el dedo sobre la foto para rodear la lista de ingredientes.</p>
+      <div class="marco-recorte"><canvas id="lienzo-recorte" aria-label="Foto de la etiqueta. Arrastra para seleccionar los ingredientes"></canvas></div>
+      <button type="button" class="boton boton-principal boton-ancho" id="btn-leer">Leer de nuevo</button>
+      <div class="enlaces">
+        <button type="button" class="enlace" id="btn-girar">↻ Girar foto</button>
+        <button type="button" class="enlace" id="btn-volver-resultado">Volver</button>
+      </div>
+    </section>
+
+    <!-- 3. Resultado -->
+    <section id="pantalla-resultado" class="pantalla" hidden>
+      <div id="veredicto" class="veredicto"></div>
+
+      <div id="motivos-caja" class="caja">
+        <h2>¿Por qué?</h2>
+        <ul id="motivos" class="motivos"></ul>
+        <p id="alergenos" class="alergenos" hidden></p>
+        <p id="avisos" class="avisos" hidden></p>
+      </div>
+
+      <button type="button" class="boton boton-principal boton-ancho" id="btn-otro">📷 Escanear otro producto</button>
+
+      <details class="caja plegable">
+        <summary id="resumen-ingredientes">Ver los ingredientes</summary>
+        <p class="ayuda">Toca uno para saber qué es y cómo afecta a tu salud.</p>
         <ul id="lista-ingredientes" class="lista-ingredientes"></ul>
         <div id="desconocidos"></div>
-      </div>
+      </details>
+
+      <details class="caja plegable" id="caja-corregir">
+        <summary>¿Se leyó mal la etiqueta?</summary>
+        <p class="ayuda">Corrige el texto y vuelve a calcular, o marca en la foto sólo la zona de ingredientes.</p>
+        <textarea id="texto-ingredientes" rows="6" aria-label="Texto leído de la etiqueta"></textarea>
+        <div class="acciones">
+          <button type="button" class="boton" id="btn-analizar">Volver a calcular</button>
+          <button type="button" class="boton" id="btn-recortar" hidden>Marcar en la foto</button>
+        </div>
+      </details>
     </section>
 
-    <section class="tarjeta leyenda">
-      <h2>¿Cómo se valora?</h2>
-      <ul>
-        <li><span class="punto nivel-bueno"></span><strong>Beneficioso:</strong> aporta nutrientes o beneficios demostrados.</li>
-        <li><span class="punto nivel-neutral"></span><strong>Neutral:</strong> seguro en cantidades habituales.</li>
-        <li><span class="punto nivel-moderar"></span><strong>Con moderación:</strong> conviene limitarlo o afecta a grupos sensibles.</li>
-        <li><span class="punto nivel-evitar"></span><strong>Mejor evitar:</strong> hay evidencia de riesgo para la salud.</li>
-      </ul>
-      <p class="ayuda">La puntuación (0-100) tiene en cuenta el efecto de cada ingrediente y su posición en la lista. No tiene en cuenta las cantidades exactas de la tabla nutricional.</p>
-    </section>
-
-    <p class="aviso-legal">
-      Información orientativa basada en evaluaciones de la EFSA, la OMS y la IARC. No sustituye el consejo de un médico o dietista-nutricionista.
-      Si tienes alergias, comprueba siempre la etiqueta original.
-    </p>
+    <p class="aviso-legal">Orientativo, basado en la EFSA, la OMS y la IARC. No sustituye a un profesional de la salud. Si tienes alergias, revisa siempre la etiqueta.</p>
   </main>
 
   <template id="plantilla-ingrediente">
     <li class="ingrediente">
       <details>
-        <summary>
-          <span class="insignia"></span>
-          <span class="nombre"></span>
-          <span class="meta"></span>
-        </summary>
+        <summary><span class="punto"></span><span class="nombre"></span><span class="etiqueta-nivel"></span></summary>
         <div class="detalle">
-          <p class="que"><strong>¿Qué es?</strong> <span></span></p>
-          <p class="salud"><strong>Efecto en tu salud:</strong> <span></span></p>
-          <p class="detectado"></p>
+          <p><strong>¿Qué es?</strong> <span class="que"></span></p>
+          <p><strong>En tu salud:</strong> <span class="salud"></span></p>
         </div>
       </details>
     </li>
