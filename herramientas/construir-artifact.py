@@ -14,11 +14,12 @@ html, css = leer("index.html"), leer("css/estilos.css")
 # Modo oscuro también con data-theme, y margen lateral seguro
 oscuro = css[css.index("@media (prefers-color-scheme: dark) {\n  :root {"):]
 oscuro = oscuro[: oscuro.index("}\n}\n") + 4]
-tokens = oscuro[oscuro.index("{\n  :root {") + 10 : oscuro.index("  }\n}")]
+tokens = oscuro[oscuro.index("{\n  :root {") + 11 : oscuro.index("  }\n}")]
 css = css.replace(oscuro, "@media (prefers-color-scheme: dark) {\n  :root:not([data-theme=\"light\"]) {" + tokens + "    color-scheme: dark;\n  }\n}\n:root[data-theme=\"dark\"] {" + tokens + "  color-scheme: dark;\n}\n")
 css = css.replace("padding: 0 16px; }", "padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }")
 css = css.replace("color: #fff; padding: 28px 0 22px;", "color: #fff; padding-block: 28px 22px;")
 
+FUENTES = "".join(l.strip() + "\n" for l in html.splitlines() if "fonts.g" in l)
 cuerpo = html[html.index("<body>") + 6 : html.index("<script src=")].replace('<span aria-hidden="true">🥗</span> ', "")
 ocr = """<script>
 window.OCR_OPCIONES = {
@@ -31,7 +32,7 @@ window.OCR_OPCIONES = {
 """
 scripts = "".join("<script>\n" + leer(f) + "\n</script>\n" for f in ["js/ingredientes-db.js", "js/analizador.js", "js/imagen.js", "js/app.js"])
 pagina = ('<meta charset="utf-8">\n<title>App Salud</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n'
-          "<style>\n" + css + "</style>\n" + cuerpo +
+          + FUENTES + "<style>\n" + css + "</style>\n" + cuerpo +
           '<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>\n' + ocr + scripts)
 open(os.path.join(salida, "index.html"), "w", encoding="utf-8").write(pagina)
 

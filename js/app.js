@@ -10,6 +10,7 @@
   };
   function mostrar(nombre) {
     for (const [k, el] of Object.entries(pantallas)) el.hidden = k !== nombre;
+    if (nombre === "inicio" && typeof pintarHistorial === "function") pintarHistorial();
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -24,7 +25,6 @@
     "aroma, colorante: caramelo (E150d), conservante: sorbato potásico. Puede contener trazas de avellanas y huevo.";
 
   const NIVELES = { bueno: "Bueno", neutral: "Normal", moderar: "Moderar", evitar: "Evitar" };
-  const ICONOS = { bueno: "✓", moderar: "!", evitar: "✕", neutral: "?" };
 
   // ── Lector de texto (OCR) ──────────────────────────────────────────────
   let worker = null;
@@ -81,7 +81,7 @@
     p.className = "error";
     p.textContent = msg;
     pantallas.inicio.querySelector(".error")?.remove();
-    pantallas.inicio.append(p);
+    pantallas.inicio.querySelector(".opciones").after(p);
   }
 
   function puntuarLectura(textoLeido, confianza) {
@@ -311,33 +311,59 @@ Respondé solo con este JSON:
     if (txt != null) e.textContent = txt;
     return e;
   }
+  function svg(html) {
+    const t = document.createElement("template");
+    t.innerHTML = html.trim();
+    return t.content.firstChild;
+  }
+  const SVG_X = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>';
+  const SVG_OK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const SVG_DUDA = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 9a3 3 0 1 1 4.2 2.8c-.8.4-1.2 1-1.2 1.9V14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="18" r="1.4" fill="currentColor"/></svg>';
+  const formatoNota = (n) => n.toLocaleString("es", { maximumFractionDigits: 1 });
 
   function pintarVeredicto(r) {
     const { resumen } = r;
     const v = $("#veredicto");
+    v.replaceChildren();
     if (!r.fiable) {
       v.className = "veredicto nivel-neutral";
-      v.replaceChildren(
-        el("div", "veredicto-icono", "?"),
+      v.append(
+        Object.assign(el("div", "icono-grande"), { innerHTML: SVG_DUDA }),
         el("p", "veredicto-titulo", "No se pudo leer bien"),
-        el("p", "veredicto-frase", "La foto no se leyó con claridad, así que preferimos no darte una nota que podría estar equivocada. "
-          + "Sacá otra foto más de cerca, enfocada y con buena luz, o corregí el texto abajo en «¿Se leyó mal la etiqueta?»."),
+        el("p", "veredicto-frase", "La foto no se leyó con claridad y preferimos no darte una nota que podría estar equivocada."),
+        el("p", "veredicto-nota-lectura", "Sacá otra foto más de cerca, enfocada y con buena luz, o corregí el texto en «¿Se leyó mal la etiqueta?»."),
       );
       return;
     }
     v.className = "veredicto nivel-" + resumen.nivel;
-    v.replaceChildren();
-    const icono = el("div", "veredicto-icono", ICONOS[resumen.nivel]);
-    icono.setAttribute("aria-hidden", "true");
-    const nota = el("div", "veredicto-nota");
-    nota.append(
-      el("span", "nota-num", r.ingredientes.length ? resumen.nota.toLocaleString("es", { maximumFractionDigits: 1 }) : "–"),
-      el("span", "nota-max", "/10"),
-    );
     if (producto) v.append(el("p", "veredicto-producto", producto));
-    v.append(icono, el("p", "veredicto-titulo", resumen.veredicto), nota, el("p", "veredicto-frase", resumen.frase));
+    const anillo = el("div", "anillo");
+    anillo.setAttribute("role", "img");
+    anillo.setAttribute("aria-label", `Nota ${formatoNota(resumen.nota)} sobre 10`);
+    anillo.append(svg('<svg viewBox="0 0 120 120" aria-hidden="true"><circle class="pista" cx="60" cy="60" r="52"/><circle class="arco" cx="60" cy="60" r="52"/></svg>'));
+    const centro = el("div", "anillo-centro");
+    centro.append(el("span", "nota-num", formatoNota(resumen.nota)), el("span", "nota-max", "de 10"));
+    anillo.append(centro);
+    v.append(anillo, el("p", "veredicto-titulo", resumen.veredicto), el("p", "veredicto-frase", resumen.frase));
     if (legibilidad === "parcial" || legibilidad === "mala") {
       v.append(el("p", "veredicto-nota-lectura", "Parte de la etiqueta se veía borrosa: revisá la lista de ingredientes por las dudas."));
+    }
+    // Animación del anillo hasta la nota
+    const arco = anillo.querySelector(".arco");
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      arco.style.strokeDashoffset = String(326.7 * (1 - Math.max(0.02, resumen.nota / 10)));
+    }));
+  }
+
+  function pintarContadores(r) {
+    const c = $("#contadores");
+    c.replaceChildren();
+    c.hidden = !r.fiable;
+    const { conteo } = r.resumen;
+    for (const [nivel, etiqueta, n] of [["evitar", "Evitar", conteo.evitar], ["moderar", "Moderar", conteo.moderar], ["bueno", "Bien", conteo.bueno + conteo.neutral]]) {
+      const d = el("div", "contador nivel-" + nivel);
+      d.append(el("b", null, String(n)), el("span", null, etiqueta));
+      c.append(d);
     }
   }
 
@@ -346,16 +372,24 @@ Respondé solo con este JSON:
     ul.replaceChildren();
     for (const m of r.resumen.motivos) {
       const li = el("li", "motivo motivo-" + m.tipo);
-      li.append(el("span", "motivo-icono", m.tipo === "malo" ? "✕" : "✓"), el("span", null, m.texto));
+      const icono = el("span", m.tipo === "malo" ? "octogono" : "hoja");
+      icono.innerHTML = m.tipo === "malo" ? SVG_X : SVG_OK;
+      li.append(icono, el("span", null, m.texto));
       ul.append(li);
     }
     if (!r.resumen.motivos.length) ul.append(el("li", "motivo", "No hay ingredientes destacables, ni buenos ni malos."));
 
     const al = $("#alergenos");
+    al.replaceChildren();
     al.hidden = !r.alergenos.length && !r.trazas.length;
-    al.textContent = "";
-    if (r.alergenos.length) al.append(el("strong", null, "Alérgenos: "), document.createTextNode(r.alergenos.join(", ") + ". "));
-    if (r.trazas.length) al.append(el("strong", null, "Puede contener: "), document.createTextNode(r.trazas.join(", ") + "."));
+    if (r.alergenos.length) {
+      al.append(el("span", "alergenos-titulo", "Alérgenos"));
+      for (const a of r.alergenos) al.append(el("span", "chip", a));
+    }
+    if (r.trazas.length) {
+      al.append(el("span", "alergenos-titulo", "Puede contener"));
+      for (const a of r.trazas) al.append(el("span", "chip traza", a));
+    }
 
     const av = $("#avisos");
     av.hidden = !r.resumen.avisos.length;
@@ -368,11 +402,9 @@ Respondé solo con este JSON:
     const plantilla = $("#plantilla-ingrediente");
     for (const ing of r.ingredientes) {
       const nodo = plantilla.content.firstElementChild.cloneNode(true);
-      nodo.querySelector(".punto").classList.add("nivel-" + ing.nivel);
+      nodo.classList.add("nivel-" + ing.nivel);
       nodo.querySelector(".nombre").textContent = ing.nombre;
-      const et = nodo.querySelector(".etiqueta-nivel");
-      et.textContent = NIVELES[ing.nivel];
-      et.classList.add("nivel-" + ing.nivel);
+      nodo.querySelector(".etiqueta-nivel").textContent = NIVELES[ing.nivel];
       nodo.querySelector(".que").textContent = ing.que;
       nodo.querySelector(".salud").textContent = ing.salud;
       lista.append(nodo);
@@ -381,36 +413,82 @@ Respondé solo con este JSON:
 
     const desc = $("#desconocidos");
     desc.replaceChildren();
-    if (r.desconocidos.length) {
-      desc.append(el("p", "ayuda", "No reconocidos: " + r.desconocidos.join(", ")));
+    if (r.desconocidos.length) desc.append(el("p", "ayuda", "No reconocidos: " + r.desconocidos.join(", ")));
+  }
+
+  // ── Historial (solo en este navegador) ─────────────────────────────────
+  const CLAVE_HISTORIAL = "app-salud-historial";
+  function leerHistorial() {
+    try { return JSON.parse(localStorage.getItem(CLAVE_HISTORIAL) || "[]").filter((h) => h && h.texto); } catch { return []; }
+  }
+  function guardarHistorial(items) {
+    try { localStorage.setItem(CLAVE_HISTORIAL, JSON.stringify(items.slice(0, 8))); } catch { /* sin almacenamiento */ }
+  }
+  function agregarAlHistorial(r) {
+    if (!r.fiable || esEjemplo) return;
+    const titulo = producto || r.ingredientes.slice(0, 3).map((i) => i.nombre.split(" (")[0]).join(", ");
+    const items = leerHistorial().filter((h) => h.texto !== texto.value);
+    items.unshift({ titulo, producto, texto: texto.value, nota: r.resumen.nota, nivel: r.resumen.nivel, veredicto: r.resumen.veredicto, fecha: Date.now() });
+    guardarHistorial(items);
+  }
+  function pintarHistorial() {
+    const items = leerHistorial();
+    const sec = $("#historial");
+    sec.hidden = !items.length;
+    const ul = $("#lista-historial");
+    ul.replaceChildren();
+    for (const h of items.slice(0, 5)) {
+      const li = el("li");
+      const b = el("button", "item-historial");
+      b.type = "button";
+      const mini = el("span", "mini-nota nivel-" + h.nivel, formatoNota(h.nota));
+      const txt = el("span", "item-historial-texto");
+      const fecha = new Date(h.fecha).toLocaleDateString("es-AR", { day: "numeric", month: "short" });
+      txt.append(el("span", "item-historial-titulo", h.titulo), el("span", "item-historial-meta", `${h.veredicto} · ${fecha}`));
+      b.append(mini, txt);
+      b.addEventListener("click", () => {
+        texto.value = h.texto;
+        producto = h.producto || "";
+        legibilidad = "";
+        imagenOriginal = null;
+        $("#btn-recortar").hidden = true;
+        analizarYMostrar({ guardar: false });
+      });
+      li.append(b);
+      ul.append(li);
     }
   }
 
-  function analizarYMostrar() {
+  let esEjemplo = false;
+  function analizarYMostrar({ guardar = true } = {}) {
     const valor = texto.value.trim();
     if (!valor) return;
     const r = Analizador.analizar(valor);
     if (!r.ingredientes.length) {
-      alertaInicio("No hemos reconocido ningún ingrediente. Revisá el texto o probá con otra foto.");
+      alertaInicio("No reconocimos ningún ingrediente. Revisá el texto o probá con otra foto.");
       return;
     }
     pantallas.inicio.querySelector(".error")?.remove();
-    pintarVeredicto(r);
-    pintarMotivos(r);
-    pintarIngredientes(r);
     for (const d of pantallas.resultado.querySelectorAll("details.plegable")) d.open = false;
     if (!r.fiable) $("#caja-corregir").open = true;
     $("#motivos-caja").hidden = !r.fiable;
     mostrar("resultado");
+    pintarVeredicto(r);
+    pintarContadores(r);
+    pintarMotivos(r);
+    pintarIngredientes(r);
+    if (guardar) agregarAlHistorial(r);
+    esEjemplo = false;
   }
 
   // ── Eventos ────────────────────────────────────────────────────────────
   const alElegir = (e) => { abrirImagen(e.target.files[0]); e.target.value = ""; };
   $("#input-camara").addEventListener("change", alElegir);
   $("#input-archivo").addEventListener("change", alElegir);
-  $("#btn-escribir").addEventListener("click", () => {
+  $("#btn-escribir").addEventListener("click", (e) => {
     const z = $("#zona-escribir");
     z.hidden = !z.hidden;
+    e.currentTarget.setAttribute("aria-expanded", String(!z.hidden));
     if (!z.hidden) $("#texto-manual").focus();
   });
   $("#btn-analizar-manual").addEventListener("click", () => {
@@ -422,6 +500,7 @@ Respondé solo con este JSON:
   });
   $("#btn-ejemplo").addEventListener("click", () => {
     texto.value = EJEMPLO;
+    esEjemplo = true;
     imagenOriginal = null;
     producto = ""; legibilidad = "";
     $("#btn-recortar").hidden = true;
@@ -437,6 +516,9 @@ Respondé solo con este JSON:
     cargarLienzo();
   });
   $("#btn-volver-resultado").addEventListener("click", () => mostrar("resultado"));
+  $("#btn-inicio").addEventListener("click", () => { cancelado = true; ctlClaude?.abort(); mostrar("inicio"); });
+  $("#btn-borrar-historial").addEventListener("click", () => { guardarHistorial([]); pintarHistorial(); });
+  pintarHistorial();
   $("#btn-cancelar").addEventListener("click", () => { cancelado = true; ctlClaude?.abort(); mostrar("inicio"); });
   $("#btn-otro").addEventListener("click", () => $("#input-camara").click());
   window.addEventListener("resize", () => { if (fuente && !pantallas.recorte.hidden) cargarLienzo(); });

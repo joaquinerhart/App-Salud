@@ -4,60 +4,117 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>App Salud</title>
-  <meta name="description" content="Sacá una foto de los ingredientes de un alimento y descubre si es recomendable para tu salud.">
-  <meta name="theme-color" content="#1f7a4d">
+  <meta name="description" content="Sacá una foto de los ingredientes de un alimento y descubrí si es recomendable para tu salud.">
+  <meta name="theme-color" content="#17804f">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Figtree:wght@400;500;600;700&display=swap">
   <link rel="stylesheet" href="css/estilos.css">
 </head>
 <body>
   <header class="cabecera">
-    <div class="contenedor">App Salud</div>
+    <div class="contenedor cabecera-fila">
+      <button type="button" class="marca" id="btn-inicio" aria-label="Ir al inicio">
+        <svg class="marca-icono" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="currentColor"/><path d="M9 21c0-7 5-12 14-12 0 9-5 14-12 14l-2 2" fill="none" stroke="var(--sobre-marca)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 20l6-6" stroke="var(--sobre-marca)" stroke-width="2.4" stroke-linecap="round"/></svg>
+        <span>App Salud</span>
+      </button>
+    </div>
   </header>
 
   <main class="contenedor">
     <!-- 1. Inicio -->
     <section id="pantalla-inicio" class="pantalla">
-      <h1>¿Es sano este producto?</h1>
-      <p class="sub">Sacá una foto de la lista de <strong>ingredientes</strong> y te decimos si es recomendable para tu salud.</p>
+      <div class="hero">
+        <p class="eyebrow">Escáner de etiquetas</p>
+        <h1>¿Es sano lo que vas a&nbsp;comer?</h1>
+        <p class="sub">Sacale una foto a la lista de <strong>ingredientes</strong> y en segundos te decimos si es recomendable para tu salud.</p>
+      </div>
+
+      <div class="ilustracion" aria-hidden="true">
+        <div class="etiqueta-demo">
+          <p><b>INGREDIENTES:</b> harina de trigo, azúcar, aceite de girasol, jarabe de glucosa, sal, emulsionante (INS 471), aromatizante…</p>
+          <span class="linea-escaneo"></span>
+        </div>
+        <div class="nota-demo">
+          <svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="18" class="pista"/><circle cx="22" cy="22" r="18" class="arco" style="--p:.35"/></svg>
+          <span><b>3,5</b><small>/10</small></span>
+        </div>
+      </div>
 
       <label class="boton-escanear" for="input-camara">
-        <span class="icono-camara" aria-hidden="true">📷</span>
-        Escanear ingredientes
+        <svg class="icono" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+        <span class="boton-escanear-texto">
+          <span class="boton-escanear-titulo">Escanear ingredientes</span>
+          <span class="boton-escanear-sub">Apuntá a la lista que dice «Ingredientes»</span>
+        </span>
       </label>
       <input id="input-camara" type="file" accept="image/*" capture="environment" hidden>
 
-      <div class="enlaces">
-        <label for="input-archivo" class="enlace">Elegir foto de la galería</label>
+      <div class="opciones">
+        <label for="input-archivo" class="opcion">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 16l5-5 4 4 3-3 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="16" cy="9" r="1.6" fill="currentColor"/></svg>
+          Desde la galería
+        </label>
         <input id="input-archivo" type="file" accept="image/*" hidden>
-        <button type="button" class="enlace" id="btn-escribir">Escribir los ingredientes</button>
-        <button type="button" class="enlace" id="btn-ejemplo">Ver un ejemplo</button>
+        <button type="button" class="opcion" id="btn-escribir" aria-expanded="false" aria-controls="zona-escribir">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+          Escribirlos
+        </button>
       </div>
 
       <div id="zona-escribir" class="zona-escribir" hidden>
-        <label for="texto-manual" class="etiqueta-campo">Copiá acá los ingredientes:</label>
+        <label for="texto-manual" class="etiqueta-campo">Pegá o escribí los ingredientes</label>
         <textarea id="texto-manual" rows="5" placeholder="Ej.: harina de trigo, azúcar, aceite de girasol, sal…"></textarea>
         <button type="button" class="boton boton-principal" id="btn-analizar-manual">Ver resultado</button>
       </div>
+
+      <section id="historial" class="historial" hidden aria-labelledby="titulo-historial">
+        <div class="historial-cabecera">
+          <h2 id="titulo-historial">Tus últimos productos</h2>
+          <button type="button" class="enlace" id="btn-borrar-historial">Borrar</button>
+        </div>
+        <ul id="lista-historial" class="lista-historial"></ul>
+      </section>
+
+      <section class="como" aria-labelledby="titulo-como">
+        <h2 id="titulo-como">Cómo funciona</h2>
+        <ol class="pasos">
+          <li><span class="paso-num">1</span><span><strong>Sacá una foto</strong> de la lista de ingredientes.</span></li>
+          <li><span class="paso-num">2</span><span><strong>Leemos cada ingrediente</strong>, incluidos los aditivos (INS o E).</span></li>
+          <li><span class="paso-num">3</span><span><strong>Te damos una nota del 0 al 10</strong> y los motivos.</span></li>
+        </ol>
+        <button type="button" class="enlace" id="btn-ejemplo">Ver un resultado de ejemplo</button>
+      </section>
     </section>
 
     <!-- 2. Leyendo -->
-    <section id="pantalla-leyendo" class="pantalla" hidden>
-      <img id="vista-previa" class="vista-previa" alt="Foto de la etiqueta">
+    <section id="pantalla-leyendo" class="pantalla pantalla-leyendo" hidden>
+      <div class="escaneo">
+        <img id="vista-previa" alt="Foto de la etiqueta">
+        <span class="linea-escaneo"></span>
+        <span class="esquina e1"></span><span class="esquina e2"></span><span class="esquina e3"></span><span class="esquina e4"></span>
+      </div>
       <p id="texto-progreso" class="texto-progreso" role="status" aria-live="polite">Leyendo la etiqueta…</p>
       <div class="barra"><div id="barra-progreso"></div></div>
       <button type="button" class="enlace" id="btn-cancelar">Cancelar</button>
     </section>
 
-    <!-- Recorte (opcional, sólo si se leyó mal) -->
+    <!-- Recorte (opcional) -->
     <section id="pantalla-recorte" class="pantalla" hidden>
-      <h2>Marcá solo los ingredientes</h2>
-      <p class="sub">Arrastrá el dedo sobre la foto para rodear la lista de ingredientes.</p>
-      <div class="marco-recorte"><canvas id="lienzo-recorte" aria-label="Foto de la etiqueta. Arrastra para seleccionar los ingredientes"></canvas></div>
+      <div>
+        <h2>Marcá solo los ingredientes</h2>
+        <p class="sub">Arrastrá el dedo sobre la foto para rodear la lista.</p>
+      </div>
+      <div class="marco-recorte"><canvas id="lienzo-recorte" aria-label="Foto de la etiqueta. Arrastrá para seleccionar los ingredientes"></canvas></div>
       <button type="button" class="boton boton-principal boton-ancho" id="btn-leer">Leer de nuevo</button>
-      <div class="enlaces">
-        <button type="button" class="enlace" id="btn-girar">↻ Girar foto</button>
-        <button type="button" class="enlace" id="btn-volver-resultado">Volver</button>
+      <div class="opciones">
+        <button type="button" class="opcion" id="btn-girar">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Girar foto
+        </button>
+        <button type="button" class="opcion" id="btn-volver-resultado">Volver</button>
       </div>
     </section>
 
@@ -65,24 +122,24 @@
     <section id="pantalla-resultado" class="pantalla" hidden>
       <div id="veredicto" class="veredicto"></div>
 
+      <div id="contadores" class="contadores"></div>
+
       <div id="motivos-caja" class="caja">
         <h2>¿Por qué?</h2>
         <ul id="motivos" class="motivos"></ul>
-        <p id="alergenos" class="alergenos" hidden></p>
+        <div id="alergenos" class="alergenos" hidden></div>
         <p id="avisos" class="avisos" hidden></p>
       </div>
 
-      <button type="button" class="boton boton-principal boton-ancho" id="btn-otro">📷 Escanear otro producto</button>
-
       <details class="caja plegable">
-        <summary id="resumen-ingredientes">Ver los ingredientes</summary>
-        <p class="ayuda">Tocá uno para saber qué es y cómo afecta a tu salud.</p>
+        <summary><span id="resumen-ingredientes">Ver los ingredientes</span><svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></summary>
+        <p class="ayuda">Ordenados como en la etiqueta: los primeros son los que más hay. Tocá uno para saber qué es.</p>
         <ul id="lista-ingredientes" class="lista-ingredientes"></ul>
         <div id="desconocidos"></div>
       </details>
 
       <details class="caja plegable" id="caja-corregir">
-        <summary>¿Se leyó mal la etiqueta?</summary>
+        <summary><span>¿Se leyó mal la etiqueta?</span><svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></summary>
         <p class="ayuda">Corregí el texto y volvé a calcular, o marcá en la foto solo la zona de ingredientes.</p>
         <textarea id="texto-ingredientes" rows="6" aria-label="Texto leído de la etiqueta"></textarea>
         <div class="acciones">
@@ -90,9 +147,16 @@
           <button type="button" class="boton" id="btn-recortar" hidden>Marcar en la foto</button>
         </div>
       </details>
+
+      <div class="barra-accion">
+        <button type="button" class="boton boton-principal boton-ancho" id="btn-otro">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+          Escanear otro producto
+        </button>
+      </div>
     </section>
 
-    <p class="aviso-legal">Orientativo, basado en la EFSA, la OMS y la IARC. No sustituye a un profesional de la salud. Si tenés alergias, revisá siempre la etiqueta.</p>
+    <p class="aviso-legal">Orientativo, basado en la EFSA, la OMS y la IARC. No reemplaza a un profesional de la salud. Si tenés alergias, revisá siempre la etiqueta.</p>
   </main>
 
   <template id="plantilla-ingrediente">
