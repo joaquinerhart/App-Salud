@@ -769,6 +769,6 @@
   ];
 
   const api = { INGREDIENTES, PALABRAS_FUNCION };
-  if (typeof module !== "undefined" && module.exports) module.exports = api;
+  if (typeof window === "undefined" && typeof module !== "undefined") module.exports = api;
   else root.SaludDB = api;
 })(typeof globalThis !== "undefined" ? globalThis : this);

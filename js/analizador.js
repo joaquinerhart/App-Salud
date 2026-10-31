@@ -3,7 +3,7 @@
  * localiza la lista de ingredientes y la cruza con la base de datos.
  */
 (function (root) {
-  const db = typeof module !== "undefined" && module.exports
+  const db = typeof window === "undefined" && typeof module !== "undefined"
     ? require("./ingredientes-db.js")
     : root.SaludDB;
 
@@ -292,6 +292,6 @@
   }
 
   const api = { analizar, normalizar, extraerIngredientes, trocear, levenshtein, NIVELES };
-  if (typeof module !== "undefined" && module.exports) module.exports = api;
+  if (typeof window === "undefined" && typeof module !== "undefined") module.exports = api;
   else root.Analizador = api;
 })(typeof globalThis !== "undefined" ? globalThis : this);

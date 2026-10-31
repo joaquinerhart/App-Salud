@@ -28,6 +28,7 @@
     if (worker) return worker;
     if (!window.Tesseract) throw new Error("No se pudo cargar el lector de texto. Revisa tu conexión a internet.");
     worker = await Tesseract.createWorker("spa", 1, {
+      ...(window.OCR_OPCIONES || {}), // permite servir el lector desde archivos propios
       logger: (m) => {
         if (m.status === "recognizing text") progreso(m.progress, "Leyendo texto…");
         else if (m.status) progreso(m.progress || 0, traducirEstado(m.status));
