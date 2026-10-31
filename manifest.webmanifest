@@ -1,0 +1,10 @@
+{
+  "name": "App Salud – Lector de ingredientes",
+  "short_name": "App Salud",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f5f7f5",
+  "theme_color": "#1f7a4d",
+  "lang": "es",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}
