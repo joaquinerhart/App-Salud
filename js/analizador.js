@@ -134,6 +134,9 @@
   function corregirOCR(t) {
     return String(t)
       .replace(/[|¦]/g, "l")
+      // Etiquetas argentinas abrevian la función del aditivo: "COL 150 d", "ACI 338", "REG 331iii"
+      .replace(/\b(COL|ARO|ACI|EDU|CON|CONS|ANT|EST|EMU|ESP|REG|RES|GEL|HUM|LEU|GAS|AGL|ANTIAG|ANTIES|SEC|ESTAB|ACIDUL)\.?\s*:?\s*(\d{3,4})\s?([a-fA-F])?((?:iii|ii|iv|vi|v|i)(?![a-zA-Z0-9]))?(?![a-zA-Z0-9])/gi,
+        (m, f, num, letra, romano) => `${f} INS ${num}${(letra || "").toLowerCase()}${(romano || "").toLowerCase()}`)
       .replace(/\b[lI1|]NS\b/g, "INS")
       .replace(/\bINS\s*[-.:]?\s*(?=\d)/gi, "INS ")
       .replace(/(\p{L})0(?=\p{L})/gu, "$1o")
@@ -189,7 +192,7 @@
     const parecida = (w, objetivo, tol) => Math.abs(w.length - objetivo.length) <= tol && levenshtein(w, objetivo) <= tol;
 
     let inicio = 0;
-    const cab = palabras.find((p) => parecida(p.w, "ingredientes", 3) || parecida(p.w, "ingrediente", 2)
+    const cab = palabras.find((p) => p.w === "ingr" || p.w === "ingred" || parecida(p.w, "ingredientes", 3) || parecida(p.w, "ingrediente", 2)
       || (/(dientes|ientes|edientes)$/.test(p.w) && parecida(p.w, "ingredientes", 4)));
     if (cab) {
       inicio = cab.f;
@@ -375,6 +378,7 @@
 
       const limpio = quitarFuncionInicial(sCorregido).replace(/[^a-z0-9ñ ]/g, "").trim();
       if (limpio.length < 3 || palabrasFuncion.has(limpio) || /^\d+$/.test(limpio)) continue;
+      if (/^\d+(?: \d+)?\s*(?:mg|g|kg|ml|cl|l|kcal|kj|mcg|ug|ui|porcion|porciones|unidades?)\b/.test(limpio)) continue;
 
       const aprox = exacto ? null : buscarAproximado(limpio);
       if (aprox) {

@@ -452,7 +452,7 @@
     },
     {
       id: "aroma", nombre: "Aromas", categoria: "Aroma", nivel: "neutral",
-      alias: ["aromatizantes", "aromatizante natural", "aromatizantes naturales", "aromatizante artificial", "aromatizantes artificiales", "saborizantes naturales", "saborizantes artificiales", "saborizante natural", "saborizante artificial", "aroma natural y artificial", "aroma", "aromas", "aroma natural", "aromas naturales", "aroma natural de vainilla", "aromatizante", "saborizante", "saborizantes", "aroma idéntico al natural", "aroma artificial", "aroma de vainilla", "vainillina", "etilvainillina", "aroma de humo", "aromas de humo"],
+      alias: ["aro", "aromatizantes", "aromatizante natural", "aromatizantes naturales", "aromatizante artificial", "aromatizantes artificiales", "saborizantes naturales", "saborizantes artificiales", "saborizante natural", "saborizante artificial", "aroma natural y artificial", "aroma", "aromas", "aroma natural", "aromas naturales", "aroma natural de vainilla", "aromatizante", "saborizante", "saborizantes", "aroma idéntico al natural", "aroma artificial", "aroma de vainilla", "vainillina", "etilvainillina", "aroma de humo", "aromas de humo"],
       que: "Sustancias que dan o refuerzan el sabor. 'Natural' significa que procede de una fuente natural, no necesariamente del alimento indicado.",
       salud: "Están autorizados y evaluados. Su presencia suele indicar que el sabor no viene del ingrediente real (p. ej. 'aroma de fresa' en vez de fresa)."
     },
@@ -773,6 +773,7 @@
     "otros", "y", "o", "de", "con", "sin", "min", "mín", "mínimo", "max", "máx", "aprox",
     "leudantes químicos", "leudante químico", "leudantes", "resaltador del sabor", "resaltadores de sabor", "acentuador de sabor", "antihumectante", "antihumectantes", "edulcorantes no nutritivos", "edulcorante no nutritivo", "edulcorantes nutritivos", "agente de firmeza", "agente de carga", "sin tacc", "tacc", "contiene derivados de", "derivados de", "derivados", "enriquecida", "fortificada", "conservadores", "acidulantes", "reguladores de la acidez", "estabilizantes", "aglutinante", "aglutinantes", "glaseante", "glaseantes", "ley", "según ley", "contiene gluten",
     "rebozado", "rebozador de", "cobertura de", "como hierro", "contiene leche",
+    "ingr", "ingred", "col", "aci", "edu", "cons", "ant", "est", "emu", "esp", "reg", "res", "gel", "hum", "leu", "agl", "antiag", "acidul", "estab", "fenilcetonuricos", "fenilcetonúricos", "contiene fenilalanina", "fenilalanina", 
     "cobertura", "relleno", "masa", "base", "crema", "galleta", "chocolate con leche", "chocolate negro", "chocolate"
   ];
 

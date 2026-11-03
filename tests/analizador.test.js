@@ -147,3 +147,13 @@ test("aprende ingredientes nuevos e ignora textos", () => {
   assert.ok(ids(r).includes("aprendido-cuajo"));
   assert.ok(!r.desconocidos.length);
 });
+
+test("etiqueta real: Coca-Cola Zero (abreviaturas argentinas COL, ARO, ACI, EDU)", () => {
+  const r = analizar("INGR.: AGUA CARBONATADA, COL 150 d, ARO, ACI 338, EDU ASPARTAMO (24 mg/100 ml) - ACESULFAME K (16 mg/100 ml), " +
+    "CON 211, REG 331iii. CONTIENE CAFEÍNA. FENILCETONÚRICOS: CONTIENE FENILALANINA. INFORMACIÓN NUTRICIONAL: Porción 200 ml");
+  for (const id of ["agua", "caramelo", "aroma", "acido-fosforico", "aspartamo", "acesulfamo", "benzoatos", "acido-citrico", "cafeina"]) {
+    assert.ok(ids(r).includes(id), id);
+  }
+  assert.deepStrictEqual(r.desconocidos, []);
+  assert.ok(r.fiable);
+});
